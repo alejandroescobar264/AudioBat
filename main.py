@@ -6,10 +6,18 @@ from pathlib import Path
 import os
 
 # Filtro pasa altos
-def highpass_filter(data, rate, cutoff=15000, order=5):
+def highpass_filter(data, rate, cutoff=1500, order=5):
     nyquist = 0.5 * rate
     normal_cutoff = cutoff / nyquist
     b, a = butter(order, normal_cutoff, btype='high', analog=False)
+    filtered_data = filtfilt(b, a, data)
+    return filtered_data
+
+# Filtro pasa bajos
+def lowpass_filter(data, rate, cutoff=15000, order=5):
+    nyquist = 0.5 * rate
+    normal_cutoff = cutoff / nyquist
+    b, a = butter(order, normal_cutoff, btype='low', analog=False)
     filtered_data = filtfilt(b, a, data)
     return filtered_data
 
@@ -32,16 +40,37 @@ def calculate_audio_metrics(audio_data, sample_rate):
     print(f"Rango dinámico: {dynamic_range:.2f} dB")
     print(f"Valor RMS: {rms:.4f}")
 
+# Función para graficar el espectro de frecuencias
+def plot_frequency_spectrum(audio_segment, sample_rate, output_dir):
+    # Aplicar la FFT
+    n = len(audio_segment)
+    fft_values = np.fft.fft(audio_segment)
+    fft_freqs = np.fft.fftfreq(n, d=1/sample_rate)
+
+    # Obtener magnitudes y limitar a frecuencias positivas
+    magnitudes = np.abs(fft_values)
+    positive_freqs = fft_freqs[:n // 2]
+    positive_magnitudes = magnitudes[:n // 2]
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(positive_freqs, positive_magnitudes, color='purple', alpha=0.7)
+    plt.title('Frequency Spectrum')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Magnitude')
+    plt.xlim(0, sample_rate / 2)  # Limitar a la mitad de la frecuencia de muestreo
+    plt.grid()
+    plt.tight_layout()
+    plt.savefig(output_dir / f"{input_file.stem}_frequency_spectrum.png", dpi=300)
+    plt.close()
+
 # Función para graficar y guardar la señal de audio completa
 def plot_full_audio(audio_data, sample_rate, output_dir, filename):
-    # Eliminar componente de continua restando la media
-    audio_data_dc_remove = remove_dc_component(audio_data)
+    
     audio_times = np.arange(len(audio_data)) / sample_rate
     
     plt.figure(figsize=(12, 8))
 
     # Subplot para la señal original
-    plt.subplot(2, 1, 1)
     plt.plot(audio_times, audio_data, color='b', alpha=0.6)
     plt.title('Audio Signal (Complete)')
     plt.xlabel('Tiempo (s)')
@@ -50,19 +79,6 @@ def plot_full_audio(audio_data, sample_rate, output_dir, filename):
     
     # Ajustar límites del eje x
     plt.xlim([audio_times[0], audio_times[-1]])
-
-    # Subplot para la señal con DC eliminado
-    plt.subplot(2, 1, 2)
-    plt.plot(audio_times, audio_data_dc_remove, color='r', alpha=0.6)
-    plt.title('Audio Signal (Complete, DC Removed)')
-    plt.xlabel('Tiempo (s)')
-    plt.ylabel('Amplitud')
-    plt.grid()
-    
-    # Ajustar límites del eje x
-    plt.xlim([audio_times[0], audio_times[-1]])
-
-    plt.tight_layout()
     
     # Guardar la figura en formato PNG
     plt.savefig(output_dir / f"{filename}_complete_signal.png", dpi=300)
@@ -70,9 +86,6 @@ def plot_full_audio(audio_data, sample_rate, output_dir, filename):
 
 # Función para graficar y guardar la región recortada y la señal filtrada
 def plot_segment_and_filtered(audio_segment, filtered_segment, sample_rate, start_time, duration, output_dir, filename):
-    # Eliminar componente de continua restando la media
-    audio_segment = remove_dc_component(audio_segment)
-    filtered_segment = remove_dc_component(filtered_segment)
 
     audio_times = np.arange(len(audio_segment)) / sample_rate + start_time
 
@@ -92,7 +105,7 @@ def plot_segment_and_filtered(audio_segment, filtered_segment, sample_rate, star
     # Subplot para la señal filtrada
     plt.subplot(2, 1, 2)
     plt.plot(audio_times, filtered_segment, color='g', alpha=0.6)
-    plt.title('Filtered Audio Signal (DC Removed)')
+    plt.title('Filtered Audio Signal (HighPass + LowPass)')
     plt.xlabel('Tiempo (s)')
     plt.ylabel('Amplitud')
     plt.grid()
@@ -108,21 +121,16 @@ def plot_segment_and_filtered(audio_segment, filtered_segment, sample_rate, star
 
 # Función para graficar la señal de audio filtrada y su espectrograma
 def plot_segment_and_spectrogram(audio_segment, sample_rate, start_time, cutoff, focus_freq=None):
-    # Eliminar componente de continua
-    audio_segment = remove_dc_component(audio_segment)
-
-    # Filtrar la señal
-    filtered_segment = highpass_filter(audio_segment, sample_rate, cutoff)
 
     # Graficar la señal filtrada
-    audio_times = np.arange(len(filtered_segment)) / sample_rate + start_time
+    audio_times = np.arange(len(audio_segment)) / sample_rate + start_time
 
     plt.figure(figsize=(12, 8))
 
     # Subplot para la señal filtrada
     plt.subplot(2, 1, 1)
-    plt.plot(audio_times, filtered_segment, color='g', alpha=0.6)
-    plt.title('Filtered Audio Signal (DC Removed)')
+    plt.plot(audio_times, audio_segment, color='g', alpha=0.6)
+    plt.title('Filtered Audio Signal (HighPass + LowPass)')
     plt.xlabel('Tiempo (s)')
     plt.ylabel('Amplitud')
     plt.grid()
@@ -132,7 +140,7 @@ def plot_segment_and_spectrogram(audio_segment, sample_rate, start_time, cutoff,
 
     # Subplot para el espectrograma
     plt.subplot(2, 1, 2)
-    Sxx, freqs, times, im = plt.specgram(filtered_segment, Fs=sample_rate, NFFT=1024, noverlap=512, cmap='inferno')
+    Sxx, freqs, times, im = plt.specgram(audio_segment, Fs=sample_rate, NFFT=1024, noverlap=512, cmap='inferno')
     
     if focus_freq is not None:
         freq_mask = np.logical_and(freqs >= focus_freq[0], freqs <= focus_freq[1])
@@ -175,31 +183,38 @@ def process_audio(file_path, start_time, duration, cutoff, focus_freq=None):
     # Calcular métricas del archivo de audio
     calculate_audio_metrics(audio_data, fs)
 
-    # Graficar y guardar la señal de audio completa
+    # Graficar y guardar la señal completa
     plot_full_audio(audio_data, fs, output_dir, file_path.stem)
-
-    # Recortar la sección deseada
-    start_sample = int(fs * start_time)
-    end_sample = start_sample + int(fs * duration)
-    audio_segment = audio_data[start_sample:end_sample]
     
-    # Aplicar filtro pasa altos
-    filtered_audio_segment = highpass_filter(audio_segment, fs, cutoff=cutoff)
+    # Eliminar componente de continua restando la media
+    audio_data_dc_remove = remove_dc_component(audio_data)
 
-    # Graficar y guardar la región recortada y la señal filtrada
-    plot_segment_and_filtered(audio_segment, filtered_audio_segment, fs, start_time, duration, output_dir, file_path.stem)
-
-    # Graficar la señal filtrada y su espectrograma
-    plot_segment_and_spectrogram(audio_segment, fs, start_time, cutoff, focus_freq)
+    # Definir el segmento de audio
+    start_sample = int(start_time * fs)
+    end_sample = start_sample + int(duration * fs)
+    audio_segment = audio_data_dc_remove[start_sample:end_sample]
     
+    # Filtrar el segmento
+    filtered_segment_highass = highpass_filter(audio_segment, fs, cutoff)
+    filtered_segment_lowpass = lowpass_filter(filtered_segment_highass, fs, cutoff)
     
+    filtered_segment = filtered_segment_lowpass
 
-# Configuración inicial
-input_file = Path("Audio/Grabaciones/AR1/AR1ecAR1303712_20240918_012907.wav")
-start = 0  # Segundos en los que empieza la sección
-duration = 10  # Duración en segundos de la sección a analizar
-cutoff = 2500  # Frecuencia de corte para el filtro pasa altos
-focus_freq = (1500, 5000)  # Frecuencias de enfoque para el espectrograma
+    # Graficar el segmento y su señal filtrada
+    plot_segment_and_filtered(audio_segment, filtered_segment, fs, start_time, duration, output_dir, file_path.stem)
 
-# Procesar la sección del archivo de audio
-process_audio(input_file, start, duration, cutoff, focus_freq)
+    # Graficar el espectro de frecuencias del segmento
+    plot_frequency_spectrum(filtered_segment, fs, output_dir)
+
+    # Graficar el espectrograma del segmento
+    plot_segment_and_spectrogram(filtered_segment, fs, start_time, cutoff, focus_freq)
+
+# Parámetros de entrada
+input_file = Path("Audio/Grabaciones/AR1/AR1ecAR1303712_20240918_012907.wav")  # Cambia esto por la ruta de tu archivo
+start_time = 0  # Tiempo de inicio en segundos
+duration = 10     # Duración del segmento en segundos
+cutoff = 2500   # Frecuencia de corte para el filtro pasa altos
+focus_freq = None  # Rango de frecuencia para el espectrograma (opcional)
+
+# Procesar el archivo de audio
+process_audio(input_file, start_time, duration, cutoff, focus_freq)
