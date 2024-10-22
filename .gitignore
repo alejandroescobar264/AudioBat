@@ -168,5 +168,6 @@ Audio/Grabaciones/AR3/
 .wav
 
 # Salidas
-Salidas/
+Salidas/*
+!Salidas/.gitkeep
 .png
