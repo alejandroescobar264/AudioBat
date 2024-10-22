@@ -1,48 +1,106 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
-from scipy.fft import fft
-from scipy.signal import resample
+from scipy.signal import butter, filtfilt
+from pathlib import Path
 
-def load_wav(file_path):
-    # Cargar archivo WAV
-    sample_rate, data = wavfile.read(file_path)
-    return sample_rate, data
+# Filtro pasa altos
+def highpass_filter(data, rate, cutoff=15000, order=5):
+    nyquist = 0.5 * rate
+    normal_cutoff = cutoff / nyquist
+    b, a = butter(order, normal_cutoff, btype='high', analog=False)
+    filtered_data = filtfilt(b, a, data)
+    return filtered_data
 
-def plot_spectrogram(data, sample_rate, title):
-    # Graficar el sonograma
-    plt.figure(figsize=(10, 6))
-    plt.specgram(data, Fs=sample_rate, NFFT=1024, noverlap=512, cmap='plasma')
-    plt.title(title)
-    plt.ylabel('Frecuencia (Hz)')
+# Función para restar la media y eliminar el componente de continua
+def remove_dc_component(data):
+    return data - np.mean(data)
+
+# Función para graficar la señal de audio completa
+def plot_full_audio(audio_data, sample_rate):
+    # Eliminar componente de continua restando la media
+    audio_data_dc_remove = remove_dc_component(audio_data)
+    audio_times = np.arange(len(audio_data)) / sample_rate
+    
+    plt.figure(figsize=(12, 8))
+
+    # Subplot para la señal recortada
+    plt.subplot(2, 1, 1)
+
+    plt.plot(audio_times, audio_data, color='b', alpha=0.6)
+    plt.title('Audio Signal (Complete)')
     plt.xlabel('Tiempo (s)')
-    plt.colorbar(label='Intensidad (dB)')
-    plt.show()
-
-def fft_analysis(data, sample_rate):
-    # Transformada de Fourier
-    N = len(data)
-    T = 1.0 / sample_rate
-    yf = fft(data)
-    xf = np.fft.fftfreq(N, T)[:N//2]
-    return xf, np.abs(yf[:N//2])
-
-def main(file_path):
-    # Cargar archivo WAV
-    sample_rate, data = load_wav(file_path)
-           
-    # Mostrar el sonograma del archivo original
-    plot_spectrogram(data, sample_rate, f"Sonograma de {file_path}")
-        
-    # Realizar análisis frecuencial (Transformada de Fourier)
-    xf, yf = fft_analysis(data, sample_rate)
-    plt.plot(xf, yf)
-    plt.title('Análisis de frecuencia')
-    plt.xlabel('Frecuencia (Hz)')
     plt.ylabel('Amplitud')
     plt.grid()
+
+    # Subplot para la señal filtrada
+    plt.subplot(2, 1, 2)
+    plt.plot(audio_times, audio_data_dc_remove, color='r', alpha=0.6)
+    plt.title('Audio Signal (Complete, DC Remove)')
+    plt.xlabel('Tiempo (s)')
+    plt.ylabel('Amplitud')
+    plt.grid()
+
+    plt.tight_layout()
     plt.show()
 
-if __name__ == "__main__":
-    file_path = "Audio/Grabaciones/AR3/M_molossus.wav"  # Cambia este archivo por tu archivo WAV
-    main(file_path)
+# Función para graficar la región recortada y la señal filtrada
+def plot_segment_and_filtered(audio_segment, filtered_segment, sample_rate, start_time, duration):
+    # Eliminar componente de continua restando la media
+    audio_segment = remove_dc_component(audio_segment)
+    filtered_segment = remove_dc_component(filtered_segment)
+
+    audio_times = np.arange(len(audio_segment)) / sample_rate + start_time
+
+    plt.figure(figsize=(12, 8))
+
+    # Subplot para la señal recortada
+    plt.subplot(2, 1, 1)
+    plt.plot(audio_times, audio_segment, color='b', alpha=0.6)
+    plt.title('Audio Signal (Segment, DC Removed)')
+    plt.xlabel('Tiempo (s)')
+    plt.ylabel('Amplitud')
+    plt.grid()
+
+    # Subplot para la señal filtrada
+    plt.subplot(2, 1, 2)
+    plt.plot(audio_times, filtered_segment, color='g', alpha=0.6)
+    plt.title('Filtered Audio Signal (DC Removed)')
+    plt.xlabel('Tiempo (s)')
+    plt.ylabel('Amplitud')
+    plt.grid()
+
+    plt.tight_layout()
+    plt.show()
+
+# Procesar un archivo de audio
+def process_audio(file_path, start_time, duration, cutoff):
+    # Cargar el archivo de audio
+    fs, audio_data = wavfile.read(file_path)
+
+    # Asegurarse de que el audio sea mono
+    if audio_data.ndim > 1:
+        audio_data = audio_data[:, 0]  # Tomar solo el primer canal si es estéreo
+
+    # Graficar la señal de audio completa
+    plot_full_audio(audio_data, fs)
+
+    # Recortar la sección deseada
+    start_sample = int(fs * start_time)
+    end_sample = start_sample + int(fs * duration)
+    audio_segment = audio_data[start_sample:end_sample]
+
+    # Aplicar filtro pasa altos
+    filtered_audio_segment = highpass_filter(audio_segment, fs, cutoff=cutoff)
+
+    # Graficar la región recortada y la señal filtrada
+    plot_segment_and_filtered(audio_segment, filtered_audio_segment, fs, start_time, duration)
+
+# Configuración inicial
+input_file = Path("Audio/Grabaciones/AR3/M_molossus.wav")
+start = 0  # Segundos en los que empieza la sección
+duration = 10  # Duración en segundos de la sección a analizar
+cutoff = 15000  # Frecuencia de corte para el filtro pasa altos
+
+# Procesar la sección del archivo de audio
+process_audio(input_file, start, duration, cutoff)
