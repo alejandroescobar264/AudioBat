@@ -165,3 +165,7 @@ cython_debug/
 Audio/Grabaciones/AR1/
 Audio/Grabaciones/AR3/
 .wav
+
+# Salidas
+Salidas/
+.png
