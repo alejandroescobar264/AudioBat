@@ -22,12 +22,12 @@ class Lanzador:
     @staticmethod
     def tecla() -> None:
         """
-        Funcion que solicita una tecla para continuar
+        Función que solicita al usuario presionar cualquier tecla para continuar.
+
+        Esta función espera cualquier entrada del usuario y luego limpia la pantalla.
         """
-        while True:
-            if input('C para continuar> ') == "C":
-                break
-        os.system("clear")
+        input("Presione cualquier tecla para continuar...")
+        os.system('clear')
 
     @staticmethod
     def informar_versiones() -> None:
