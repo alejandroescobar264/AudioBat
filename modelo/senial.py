@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from scipy.io import wavfile  # Importar la librería soundfile para leer archivos WAV
+from typing import Any
 
 class SenialBase(ABC):
     """
@@ -9,7 +10,7 @@ class SenialBase(ABC):
     especificando los métodos que deben implementarse en las subclases.
     """
 
-    def __init__(self, datos: any):
+    def __init__(self, datos: Any):
         """
         Inicializa la señal con los datos.
 
@@ -24,13 +25,6 @@ class SenialBase(ABC):
         """
         Procesa la señal.
 
-        """
-        pass
-
-    @abstractmethod
-    def graficar(self):
-        """
-        Grafica la señal.
         """
         pass
 
@@ -52,6 +46,10 @@ class SenialAudio(SenialBase):
         super().__init__(datos)
         self.frecuencia_muestreo = frecuencia_muestreo
 
+    def procesar(self):
+        pass  # Implementa la lógica de procesamiento si es necesario
+
+    
     def obtener_duracion(self) -> int:
         """
         Calcula la duración de la señal de audio en segundos.
@@ -80,6 +78,10 @@ class SenialAudioWAV(SenialAudio):
         frecuencia_muestreo, audio_data = wavfile.read(ruta_archivo)
         super().__init__(audio_data, frecuencia_muestreo)
 
+    def procesar(self):
+        pass  # Implementa la lógica de procesamiento si es necesario
+
+    
     def guardar(self, ruta_archivo) -> None:
         """
         Guarda la señal de audio WAV en un archivo.

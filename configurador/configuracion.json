@@ -1,0 +1,15 @@
+{
+    "configuracion": {
+        "directorio_datos": "/Audio/Grabaciones",
+        "procesador": {
+            "parametros": {
+                "id": "FFT",
+                "text": "10"
+            },
+            "tipo": "Amplificador"
+        },
+        "senial_pro": {
+            "tipo": "WAV"
+        }
+    }
+}
