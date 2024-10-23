@@ -1,6 +1,5 @@
 from abc import ABC, abstractmethod
 import numpy as np
-import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt
 from modelo.senial import SenialAudio
 
@@ -167,11 +166,12 @@ class FFTProcessor(AudioProcessor):
     """
     Clase para aplicar la Transformada Rápida de Fourier (FFT) a una señal de audio.
     """
-    def __init__(self):
+    def __init__(self, senial_audio: SenialAudio):
         """
         Inicializa el procesador FFTProcessor.
         
         """
+        super().__init__(senial_audio)
         self.freqs = None
         
     def process(self) -> None:
@@ -187,23 +187,5 @@ class FFTProcessor(AudioProcessor):
         self._processed_data = np.abs(fft_values[:n//2])
         self.freqs = fft_freqs[:n//2]
         
-        return self._processed_data, self.freqs
+        return self._processed_data, self.freqs, self.fs
     
-    def plot_spectrum(self, output_dir, filename):
-            """
-            Grafica el espectro de frecuencias.
-
-            Args:
-                output_dir (Path): Directorio donde guardar la imagen.
-                filename (str): Nombre del archivo de salida.
-            """
-            plt.figure(figsize=(12, 6))
-            plt.plot(self.freqs, self._processed_data, color='purple', alpha=0.7)
-            plt.title('Frequency Spectrum $\\bf{{{filename}}}$')
-            plt.xlabel('Frequency (Hz)')
-            plt.ylabel('Magnitude')
-            plt.xlim(0, self.fs / 2)  # Limitar a la mitad de la frecuencia de muestreo
-            plt.grid()
-            plt.tight_layout()
-            plt.savefig(output_dir / f"{filename}_frequency_spectrum.png", dpi=300)
-            plt.close()

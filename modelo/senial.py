@@ -21,15 +21,6 @@ class SenialBase(ABC):
         """
         self.datos = datos
 
-
-    @abstractmethod
-    def graficar(self, output_dir, filename):
-        """
-        Grafica la señal.
-
-        """
-        pass
-
 class SenialAudio(SenialBase):
     """
     Clase abstracta que representa una señal de audio.
@@ -50,9 +41,6 @@ class SenialAudio(SenialBase):
     
     def __len__(self):
         return len(self.datos)
-
-    def graficar(self):
-        pass
 
     
     def obtener_duracion(self) -> int:
@@ -85,60 +73,6 @@ class SenialAudioWAV(SenialAudio):
     
     def __len__(self):
         return len(self.datos)
-
-    def graficar(self, output_dir, filename):
-    
-        audio_times = np.arange(len(self.datos)) / self.frecuencia_muestreo
-        
-        plt.figure(figsize=(12, 8))
-
-        # Subplot para la señal original
-        plt.plot(audio_times, self.datos, color='b', alpha=0.6)
-        plt.title(f'Audio Signal $\\bf{{{filename}}}$ (Complete)')
-        plt.xlabel('Tiempo (s)')
-        plt.ylabel('Amplitud')
-        plt.grid()
-        
-        # Ajustar límites del eje x
-        plt.xlim([audio_times[0], audio_times[-1]])
-                            
-        # Guardar la figura en formato PNG
-        plt.savefig(output_dir / f"{filename}_complete_signal.png", dpi=300)
-        plt.close()
-    
-    def graficar_segmento_filtrado(self, audio_segment, filtered_segment, start_time, output_dir, filename):
-    
-        audio_times = np.arange(len(audio_segment)) / self.frecuencia_muestreo + start_time
-
-        plt.figure(figsize=(12, 8))
-
-        # Subplot para la señal recortada
-        plt.subplot(2, 1, 1)
-        plt.plot(audio_times, audio_segment.datos, color='b', alpha=0.6)
-        plt.title(f'Audio Signal $\\bf{{{filename}}}$ (Segment, DC Removed)')
-        plt.xlabel('Tiempo (s)')
-        plt.ylabel('Amplitud')
-        plt.grid()
-        
-        # Ajustar límites del eje x
-        plt.xlim([audio_times[0], audio_times[-1]])
-
-        # Subplot para la señal filtrada
-        plt.subplot(2, 1, 2)
-        plt.plot(audio_times, filtered_segment.datos, color='g', alpha=0.6)
-        plt.title(f'Filtered Audio Signal $\\bf{{{filename}}}$ (HighPass + LowPass)')
-        plt.xlabel('Tiempo (s)')
-        plt.ylabel('Amplitud')
-        plt.grid()
-        
-        # Ajustar límites del eje x
-        plt.xlim([audio_times[0], audio_times[-1]])
-
-        plt.tight_layout()
-
-        # Guardar la figura en formato PNG
-        plt.savefig(output_dir / f"{filename}_segment_filtered.png", dpi=300)
-        plt.close()
 
     
     def guardar(self, ruta_archivo) -> None:

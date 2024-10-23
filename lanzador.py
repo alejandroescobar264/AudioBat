@@ -11,6 +11,7 @@ from pathlib import Path
 import modelo.senial
 import procesador
 import procesador.procesador
+import visualizador.visualizador
 
 
 
@@ -47,6 +48,7 @@ class Lanzador:
         Lanzador.informar_versiones()
         Lanzador.tecla()
 
+
         os.system("clear")
         print("Inicio - Paso 1 - Carga de la señal")
         # Paso 1 - Se carga la senial
@@ -55,9 +57,14 @@ class Lanzador:
         ruta_archivo = Path("Audio/Grabaciones/AR1/AR1ecAR1303712_20240918_012907.wav")
         senial_audio = modelo.senial.SenialAudioWAV(ruta_archivo)
         
+                
         # Crear carpeta de salida basada en el nombre del archivo de audio
         ruta_salida = Path("Salidas") / ruta_archivo.stem
         os.makedirs(ruta_salida, exist_ok=True)
+        
+        # Se instancian las clases que participan del procesamiento
+        mi_procesador = procesador.procesador
+        mi_visualizador = visualizador.visualizador.Visualizador(ruta_salida, ruta_archivo.stem)
         
         # Mostrar métricas
         print("    |--> Métricas de la señal")
@@ -67,7 +74,7 @@ class Lanzador:
         print("Inicio - Paso 2 - Procesamiento")
         
         print("    |--> Se resta la continua")
-        DCRemover = procesador.procesador.DCRemover(senial_audio)
+        DCRemover = mi_procesador.DCRemover(senial_audio)
         DCRemover.process()
         senial_audio_dc_remove = DCRemover.get_processed_data()
 
@@ -75,23 +82,23 @@ class Lanzador:
         # Segmentar los primeros 10 segundos
         start_time = 0
         duration = 10
-        segmentador = procesador.procesador.Segmenter(senial_audio_dc_remove, start_time, duration)
+        segmentador = mi_procesador.Segmenter(senial_audio_dc_remove, start_time, duration)
         segmentador.process()
         segmento_senial = segmentador.get_processed_data()
 
         print("    |--> Se filtra la señal")
         # Aplicar filtros
-        filtro_pasa_altos = procesador.procesador.HighPassFilter(segmento_senial, cutoff_freq=2500)
+        filtro_pasa_altos = mi_procesador.HighPassFilter(segmento_senial, cutoff_freq=2500)
         filtro_pasa_altos.process()
         segmento_senial_filtrada_altos = filtro_pasa_altos.get_processed_data()
 
-        filtro_pasa_bajos = procesador.procesador.LowPassFilter(segmento_senial_filtrada_altos, cutoff_freq=5000)
+        filtro_pasa_bajos = mi_procesador.LowPassFilter(segmento_senial_filtrada_altos, cutoff_freq=5000)
         filtro_pasa_bajos.process()
         segmento_senial_filtrada = filtro_pasa_bajos.get_processed_data()
         
         print("    |--> Se calcula la FFT de la señal")
-        fft_processor = procesador.procesador.FFTProcessor(segmento_senial_filtrada)
-        magitudes, frecuencias = fft_processor.process()
+        fft_processor = mi_procesador.FFTProcessor(segmento_senial_filtrada)
+        magitudes, frecuencia, frecuencia_muestreo = fft_processor.process()
         
 
         # Paso 3 - Se muestran las seniales
@@ -99,10 +106,10 @@ class Lanzador:
         
         # Visualizar los resultados
         print("    |--> Guardar señal audio completa")
-        senial_audio.graficar(ruta_salida, ruta_archivo.stem)
+        mi_visualizador.plot_audio(senial_audio)
         print("    |--> Guardar segmento filtrado")
-        senial_audio.graficar_segmento_filtrado(segmento_senial, segmento_senial_filtrada, start_time, ruta_salida, ruta_archivo.stem)
-
-
+        mi_visualizador.plot_audio_segment_filtrado(segmento_senial, segmento_senial_filtrada, start_time)
+        print("    |--> Guardar espectro frecuencias")
+        mi_visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)
 if __name__ == "__main__":
     Lanzador().ejecutar()
