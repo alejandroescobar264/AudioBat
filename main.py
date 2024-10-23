@@ -133,21 +133,24 @@ def plot_segment_and_spectrogram(audio_segment, sample_rate, start_time, cutoff,
     plt.title('Filtered Audio Signal (HighPass + LowPass)')
     plt.xlabel('Tiempo (s)')
     plt.ylabel('Amplitud')
-    plt.grid()
+
+    plt.grid(which='major', color='#666666', linestyle='-')
+    plt.grid(which='minor', color='#999999', linestyle=':')
+    plt.minorticks_on()
     
     # Ajustar límites del eje x
     plt.xlim([audio_times[0], audio_times[-1]])
 
     # Subplot para el espectrograma
     plt.subplot(2, 1, 2)
-    Sxx, freqs, times, im = plt.specgram(audio_segment, Fs=sample_rate, NFFT=1024, noverlap=512, cmap='inferno')
+    Sxx, freqs, times, im = plt.specgram(audio_segment, Fs=sample_rate, NFFT=1024, noverlap=512, cmap='binary')
     
     if focus_freq is not None:
         freq_mask = np.logical_and(freqs >= focus_freq[0], freqs <= focus_freq[1])
-        plt.pcolormesh(times, freqs[freq_mask], 10 * np.log10(Sxx[freq_mask, :]), shading='gouraud', cmap='inferno')
+        plt.pcolormesh(times, freqs[freq_mask], 10 * np.log10(Sxx[freq_mask, :]), shading='gouraud', cmap='binary')
         plt.ylim(focus_freq)  # Limitar las frecuencias visibles al rango de enfoque
     else:
-        plt.pcolormesh(times, freqs, 10 * np.log10(Sxx), shading='gouraud', cmap='inferno')
+        plt.pcolormesh(times, freqs, 10 * np.log10(Sxx), shading='gouraud', cmap='binary')
 
     plt.title('Spectrogram of Filtered Audio Segment')
     plt.ylabel('Frecuencia (Hz)')
@@ -214,7 +217,7 @@ input_file = Path("Audio/Grabaciones/AR1/AR1ecAR1303712_20240918_012907.wav")  #
 start_time = 0  # Tiempo de inicio en segundos
 duration = 10     # Duración del segmento en segundos
 cutoff = 2500   # Frecuencia de corte para el filtro pasa altos
-focus_freq = None  # Rango de frecuencia para el espectrograma (opcional)
+focus_freq = (1500,5000)  # Rango de frecuencia para el espectrograma (opcional)
 
 # Procesar el archivo de audio
 process_audio(input_file, start_time, duration, cutoff, focus_freq)
