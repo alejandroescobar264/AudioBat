@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt
 from modelo.senial import SenialAudio
 
@@ -160,3 +161,49 @@ class DCRemover(AudioProcessor):
         # Crear un nuevo objeto SenialAudio con los datos procesados
         processed_signal = SenialAudio(self._processed_data, self.fs)
         self._processed_data = processed_signal
+
+
+class FFTProcessor(AudioProcessor):
+    """
+    Clase para aplicar la Transformada Rápida de Fourier (FFT) a una señal de audio.
+    """
+    def __init__(self):
+        """
+        Inicializa el procesador FFTProcessor.
+        
+        """
+        self.freqs = None
+        
+    def process(self) -> None:
+        """
+        Aplica la FFT a la señal de audio y calcula el espectro de frecuencias.
+        """
+        # Aplicar la FFT
+        n = len(self.audio_data)
+        fft_values = np.fft.fft(self.audio_data)
+        fft_freqs = np.fft.fftfreq(n, d=1/self.fs)
+
+        # Obtener magnitudes y limitar a frecuencias positivas
+        self._processed_data = np.abs(fft_values[:n//2])
+        self.freqs = fft_freqs[:n//2]
+        
+        return self._processed_data, self.freqs
+    
+    def plot_spectrum(self, output_dir, filename):
+            """
+            Grafica el espectro de frecuencias.
+
+            Args:
+                output_dir (Path): Directorio donde guardar la imagen.
+                filename (str): Nombre del archivo de salida.
+            """
+            plt.figure(figsize=(12, 6))
+            plt.plot(self.freqs, self._processed_data, color='purple', alpha=0.7)
+            plt.title('Frequency Spectrum $\\bf{{{filename}}}$')
+            plt.xlabel('Frequency (Hz)')
+            plt.ylabel('Magnitude')
+            plt.xlim(0, self.fs / 2)  # Limitar a la mitad de la frecuencia de muestreo
+            plt.grid()
+            plt.tight_layout()
+            plt.savefig(output_dir / f"{filename}_frequency_spectrum.png", dpi=300)
+            plt.close()

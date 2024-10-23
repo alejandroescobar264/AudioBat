@@ -94,7 +94,7 @@ class SenialAudioWAV(SenialAudio):
 
         # Subplot para la señal original
         plt.plot(audio_times, self.datos, color='b', alpha=0.6)
-        plt.title('Audio Signal (Complete)')
+        plt.title(f'Audio Signal $\\bf{{{filename}}}$ (Complete)')
         plt.xlabel('Tiempo (s)')
         plt.ylabel('Amplitud')
         plt.grid()
@@ -115,7 +115,7 @@ class SenialAudioWAV(SenialAudio):
         # Subplot para la señal recortada
         plt.subplot(2, 1, 1)
         plt.plot(audio_times, audio_segment.datos, color='b', alpha=0.6)
-        plt.title('Audio Signal (Segment, DC Removed)')
+        plt.title(f'Audio Signal $\\bf{{{filename}}}$ (Segment, DC Removed)')
         plt.xlabel('Tiempo (s)')
         plt.ylabel('Amplitud')
         plt.grid()
@@ -126,7 +126,7 @@ class SenialAudioWAV(SenialAudio):
         # Subplot para la señal filtrada
         plt.subplot(2, 1, 2)
         plt.plot(audio_times, filtered_segment.datos, color='g', alpha=0.6)
-        plt.title('Filtered Audio Signal (HighPass + LowPass)')
+        plt.title(f'Filtered Audio Signal $\\bf{{{filename}}}$ (HighPass + LowPass)')
         plt.xlabel('Tiempo (s)')
         plt.ylabel('Amplitud')
         plt.grid()
@@ -149,3 +149,16 @@ class SenialAudioWAV(SenialAudio):
             ruta_archivo: Ruta donde se guardará el archivo WAV.
         """
         wavfile.write(ruta_archivo, self.frecuencia_muestreo, self.datos)
+    
+    # Función para calcular métricas del archivo de audio
+    def metricas(self):
+        energy = np.sum(self.datos**2)  # Energía total de la señal
+        max_amplitude = np.max(np.abs(self.datos))  # Amplitud máxima
+        dynamic_range = 20 * np.log10(max_amplitude / np.mean(np.abs(self.datos)))  # Rango dinámico en dB
+        rms = np.sqrt(np.mean(self.datos**2))  # Valor RMS de la señal
+
+        print(f"        Duración: {self.obtener_duracion():.2f} segundos")
+        print(f"        Energía total: {energy:.2e}")
+        print(f"        Amplitud máxima: {max_amplitude}")
+        print(f"        Rango dinámico: {dynamic_range:.2f} dB")
+        print(f"        Valor RMS: {rms:.4f}")

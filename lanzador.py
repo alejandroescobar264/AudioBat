@@ -58,6 +58,10 @@ class Lanzador:
         # Crear carpeta de salida basada en el nombre del archivo de audio
         ruta_salida = Path("Salidas") / ruta_archivo.stem
         os.makedirs(ruta_salida, exist_ok=True)
+        
+        # Mostrar métricas
+        print("    |--> Métricas de la señal")
+        senial_audio.metricas()
 
         # Paso 2 - Se procesa la senial adquirida
         print("Inicio - Paso 2 - Procesamiento")
@@ -84,6 +88,11 @@ class Lanzador:
         filtro_pasa_bajos = procesador.procesador.LowPassFilter(segmento_senial_filtrada_altos, cutoff_freq=5000)
         filtro_pasa_bajos.process()
         segmento_senial_filtrada = filtro_pasa_bajos.get_processed_data()
+        
+        print("    |--> Se calcula la FFT de la señal")
+        fft_processor = procesador.procesador.FFTProcessor(segmento_senial_filtrada)
+        magitudes, frecuencias = fft_processor.process()
+        
 
         # Paso 3 - Se muestran las seniales
         print("Inicio - Paso 3 - Mostrar Señales")
