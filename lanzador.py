@@ -83,8 +83,11 @@ class Lanzador:
 
         # Paso 3 - Se muestran las seniales
         print("Inicio - Paso 3 - Mostrar Señales")
-        # Visualizar los resultados
         
+        # Visualizar los resultados
+        print("Guardar señal audio completa")
+        senial_audio.graficar(ruta_salida, ruta_archivo.stem)
+        print("Guardar segmento filtrado")
         senial_audio.graficar_segmento_filtrado(segmento_senial, segmento_senial_filtrada, start_time, ruta_salida, ruta_archivo.stem)
 
 

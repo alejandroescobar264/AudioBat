@@ -23,7 +23,7 @@ class SenialBase(ABC):
 
 
     @abstractmethod
-    def graficar(self):
+    def graficar(self, output_dir, filename):
         """
         Grafica la señal.
 
@@ -51,26 +51,8 @@ class SenialAudio(SenialBase):
     def __len__(self):
         return len(self.datos)
 
-    def graficar(self, output_dir, filename):
-    
-        audio_times = np.arange(len(self.datos)) / self.frecuencia_muestreo
-        
-        plt.figure(figsize=(12, 8))
-
-        # Subplot para la señal original
-        plt.plot(audio_times, self.datos, color='b', alpha=0.6)
-        plt.title('Audio Signal (Complete)')
-        plt.xlabel('Tiempo (s)')
-        plt.ylabel('Amplitud')
-        plt.grid()
-        
-        # Ajustar límites del eje x
-        plt.xlim([audio_times[0], audio_times[-1]])
-                            
-        # Guardar la figura en formato PNG
-        plt.savefig(output_dir / f"{filename}_complete_signal.png", dpi=300)
-        plt.show()
-        plt.close() 
+    def graficar(self):
+        pass
 
     
     def obtener_duracion(self) -> int:
@@ -104,8 +86,25 @@ class SenialAudioWAV(SenialAudio):
     def __len__(self):
         return len(self.datos)
 
-    def graficar(self):
-        pass  # Implementa la lógica de procesamiento si es necesario
+    def graficar(self, output_dir, filename):
+    
+        audio_times = np.arange(len(self.datos)) / self.frecuencia_muestreo
+        
+        plt.figure(figsize=(12, 8))
+
+        # Subplot para la señal original
+        plt.plot(audio_times, self.datos, color='b', alpha=0.6)
+        plt.title('Audio Signal (Complete)')
+        plt.xlabel('Tiempo (s)')
+        plt.ylabel('Amplitud')
+        plt.grid()
+        
+        # Ajustar límites del eje x
+        plt.xlim([audio_times[0], audio_times[-1]])
+                            
+        # Guardar la figura en formato PNG
+        plt.savefig(output_dir / f"{filename}_complete_signal.png", dpi=300)
+        plt.close()
     
     def graficar_segmento_filtrado(self, audio_segment, filtered_segment, start_time, output_dir, filename):
     
