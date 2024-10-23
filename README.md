@@ -9,6 +9,11 @@ Para instalar los requerimientos emplear el comando:
 ```
 pip install -r requirements.txt
 ```
+
+> [!WARNING]
+> Para hacer andar las importaciones en VS Code se deben instalar los modulos con el comando:
+> ``` pip install -e . ```
+
 Para abordar este trabajo vamos a centrarnos en los requerimientos funcionales clave:
 
 1. **Procesamiento de Archivos de Audio y Preprocesamiento**:
