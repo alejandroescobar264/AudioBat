@@ -83,3 +83,61 @@ class Visualizador:
         # Guardar la figura en formato PNG
         plt.savefig(self.output_dir / f"{self.filename}_segment_filtered.png", dpi=300)
         plt.close()
+    
+
+    def plot_audio_segment_and_spectrogram(self, audio_segment, start_time, focus_freq=None):
+        """
+        Grafica un segmento de audio y su espectrograma.
+
+        Args:
+            audio_segment (np.ndarray): Segmento de audio.
+            sample_rate (int): Frecuencia de muestreo.
+            start_time (float): Tiempo de inicio del segmento.
+            focus_freq (tuple, optional): Rango de frecuencias a enfocar.
+        """
+        fs = audio_segment.frecuencia_muestreo
+        
+        # Graficar la señal filtrada
+        audio_times = np.arange(len(audio_segment)) / fs + start_time
+
+        plt.figure(figsize=(12, 8))
+
+        # Subplot para la señal filtrada
+        plt.subplot(2, 1, 1)
+        plt.plot(audio_times, audio_segment.datos, color='g', alpha=0.6)
+        plt.title('Filtered Audio Signal $\\bf{{{self.filename}}}$ (HighPass + LowPass)')
+        plt.xlabel('Tiempo (s)')
+        plt.ylabel('Amplitud')
+
+        plt.grid(which='major', color='#666666', linestyle='-')
+        plt.grid(which='minor', color='#999999', linestyle=':')
+        plt.minorticks_on()
+        
+        # Ajustar límites del eje x
+        plt.xlim([audio_times[0], audio_times[-1]])
+
+        # Subplot para el espectrograma
+        plt.subplot(2, 1, 2)
+        Sxx, freqs, times, im = plt.specgram(audio_segment.datos, Fs=fs, NFFT=1024, noverlap=512, cmap='binary')
+        
+        if focus_freq is not None:
+            freq_mask = np.logical_and(freqs >= focus_freq[0], freqs <= focus_freq[1])
+            plt.pcolormesh(times, freqs[freq_mask], 10 * np.log10(Sxx[freq_mask, :]), shading='gouraud', cmap='binary')
+            plt.ylim(focus_freq)  # Limitar las frecuencias visibles al rango de enfoque
+        else:
+            plt.pcolormesh(times, freqs, 10 * np.log10(Sxx), shading='gouraud', cmap='binary')
+
+        plt.title('Spectrogram of Filtered Audio Segment $\\bf{{{self.filename}}}$')
+        plt.ylabel('Frecuencia (Hz)')
+        plt.xlabel('Tiempo (s)')
+        plt.colorbar(label='Intensidad (dB)', location='bottom')
+
+        # Ajustar límites del eje x
+        plt.xlim([audio_times[0], audio_times[-1]])
+
+        plt.tight_layout()
+        
+        
+        # Guardar figura como PNG
+        plt.savefig(self.output_dir / f"{self.filename}_spectrogram_segment.png")
+        plt.close()

@@ -109,7 +109,12 @@ class Lanzador:
         mi_visualizador.plot_audio(senial_audio)
         print("    |--> Guardar segmento filtrado")
         mi_visualizador.plot_audio_segment_filtrado(segmento_senial, segmento_senial_filtrada, start_time)
+        print("    |--> Guardar espectrograma del segmento")
+        focus_freq = (1500,5000)  # Rango de frecuencia para el espectrograma (opcional)
+        mi_visualizador.plot_audio_segment_and_spectrogram(segmento_senial, start_time, focus_freq)
         print("    |--> Guardar espectro frecuencias")
         mi_visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)
+        
+        
 if __name__ == "__main__":
     Lanzador().ejecutar()
