@@ -144,3 +144,19 @@ class LowPassFilter(AudioProcessor):
         # Crear un nuevo objeto SenialAudio con los datos procesados
         processed_signal = SenialAudio(self._processed_data, self.fs)
         self._processed_data = processed_signal
+
+
+class DCRemover(AudioProcessor):
+    """
+    Clase DCRemover para eliminar la componente de continua de una señal de audio.
+    """
+
+    def process(self) -> None:
+        """
+        Elimina la componente de continua de la señal.
+        """
+        self._processed_data = (self.audio_data - np.mean(self.audio_data) )
+        
+        # Crear un nuevo objeto SenialAudio con los datos procesados
+        processed_signal = SenialAudio(self._processed_data, self.fs)
+        self._processed_data = processed_signal

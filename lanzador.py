@@ -61,17 +61,21 @@ class Lanzador:
 
         # Paso 2 - Se procesa la senial adquirida
         print("Inicio - Paso 2 - Procesamiento")
-        Lanzador.tecla()
+        
+        print("    |--> Se resta la continua")
+        DCRemover = procesador.procesador.DCRemover(senial_audio)
+        DCRemover.process()
+        senial_audio_dc_remove = DCRemover.get_processed_data()
 
-        print("Se segmenta la señal")
+        print("    |--> Se segmenta la señal")
         # Segmentar los primeros 10 segundos
         start_time = 0
         duration = 10
-        segmentador = procesador.procesador.Segmenter(senial_audio, start_time, duration)
+        segmentador = procesador.procesador.Segmenter(senial_audio_dc_remove, start_time, duration)
         segmentador.process()
         segmento_senial = segmentador.get_processed_data()
 
-        print("Se filtra la señal")
+        print("    |--> Se filtra la señal")
         # Aplicar filtros
         filtro_pasa_altos = procesador.procesador.HighPassFilter(segmento_senial, cutoff_freq=2500)
         filtro_pasa_altos.process()
@@ -85,9 +89,9 @@ class Lanzador:
         print("Inicio - Paso 3 - Mostrar Señales")
         
         # Visualizar los resultados
-        print("Guardar señal audio completa")
+        print("    |--> Guardar señal audio completa")
         senial_audio.graficar(ruta_salida, ruta_archivo.stem)
-        print("Guardar segmento filtrado")
+        print("    |--> Guardar segmento filtrado")
         senial_audio.graficar_segmento_filtrado(segmento_senial, segmento_senial_filtrada, start_time, ruta_salida, ruta_archivo.stem)
 
 
