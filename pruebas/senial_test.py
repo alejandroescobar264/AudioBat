@@ -1,29 +1,14 @@
 import unittest
 from scipy.io.wavfile import write, read
-import numpy as np
 import sys
 import os
+from pathlib import Path
 
 # Añade el directorio raíz del proyecto al PYTHONPATH
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 from modelo.senial import SenialAudioWAV, SenialAudio
+from pruebas.utils import *
 
-
-def generar_senal_senoidal(frecuencia, duracion, frecuencia_muestreo):
-    """
-    Genera una señal de audio senoidal.
-
-    Args:
-        frecuencia (float): Frecuencia de la señal senoidal (Hz).
-        duracion (float): Duración de la señal en segundos.
-        frecuencia_muestreo (int): Frecuencia de muestreo (Hz).
-
-    Returns:
-        np.ndarray: Señal senoidal generada.
-    """
-    t = np.linspace(0, duracion, int(frecuencia_muestreo * duracion), endpoint=False)
-    señal = 0.5 * np.sin(2 * np.pi * frecuencia * t)
-    return np.int16(señal * 32767)  # Escalamos a int16 para audio WAV
 
 
 class TestSenialAudio(unittest.TestCase):
@@ -36,7 +21,7 @@ class TestSenialAudio(unittest.TestCase):
         self.frecuencia_senal = 5  # Frecuencia de la señal senoidal en Hz
         self.duracion_senal = 2  # Duración de la señal en segundos
         self.frecuencia_muestreo = 50  # Frecuencia de muestreo en Hz
-        self.datos = generar_senal_senoidal(self.frecuencia_senal, self.duracion_senal, self.frecuencia_muestreo)
+        self.datos = generar_senial_senoidal(self.frecuencia_senal, self.duracion_senal, self.frecuencia_muestreo)
         self.senial = SenialAudio(self.datos, self.frecuencia_muestreo)
 
     def test_obtener_duracion(self):
@@ -53,14 +38,13 @@ class TestSenialAudioWAV(unittest.TestCase):
         Método que se ejecuta antes de cada prueba.
         Crea un archivo WAV temporal con una señal senoidal.
         """
-        self.ruta_archivo = 'test_audio.wav'
+        self.ruta_archivo = Path("pruebas/test_audio.wav")
         self.frecuencia_senal = 5  # Frecuencia de la señal senoidal en Hz
         self.duracion_senal = 2  # Duración de la señal en segundos
         self.frecuencia_muestreo = 50  # Frecuencia de muestreo en Hz
-        self.datos = generar_senal_senoidal(self.frecuencia_senal, self.duracion_senal, self.frecuencia_muestreo)
-
-        # Crear archivo WAV temporal para la prueba
-        write(self.ruta_archivo, self.frecuencia_muestreo, self.datos)
+        self.datos = generar_senial_senoidal(self.frecuencia_senal, self.duracion_senal, self.frecuencia_muestreo)
+        crear_senial_prueba(self.ruta_archivo, self.frecuencia_senal, self.duracion_senal, self.frecuencia_muestreo)
+        self.senial = SenialAudioWAV(self.ruta_archivo)
 
     def tearDown(self):
         """
@@ -97,6 +81,22 @@ class TestSenialAudioWAV(unittest.TestCase):
         # Eliminar archivo temporal
         if os.path.exists(nueva_ruta_archivo):
             os.remove(nueva_ruta_archivo)
+    
+    def test_graficar_segmento_filtrado(self):
+        
+        # Graficar el segmento y la señal filtrada
+        self.senial.graficar_segmento_filtrado(self.senial, self.senial, 0, Path("pruebas"), self.ruta_archivo.stem)
+
+        # Verificar que el archivo de imagen se haya creado
+        self.assertTrue(os.path.exists("pruebas/test_audio_segment_filtered.png"))
+        
+        # Eliminar archivo temporal
+        if os.path.exists("pruebas/test_audio_segment_filtered.png"):
+            os.remove("pruebas/test_audio_segment_filtered.png")
+
+    def test_excepcion_ruta_invalida(self):
+        with self.assertRaises(FileNotFoundError):
+            SenialAudioWAV("ruta/invalida.wav")
 
 if __name__ == '__main__':
     unittest.main()

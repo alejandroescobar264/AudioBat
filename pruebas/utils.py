@@ -1,6 +1,7 @@
 import numpy as np
+from scipy.io import wavfile
 
-def generar_senal_senoidal(frecuencia, duracion, frecuencia_muestreo):
+def generar_senial_senoidal(frecuencia, duracion, frecuencia_muestreo):
     """
     Genera una señal de audio senoidal.
 
@@ -15,3 +16,11 @@ def generar_senal_senoidal(frecuencia, duracion, frecuencia_muestreo):
     t = np.linspace(0, duracion, int(frecuencia_muestreo * duracion), endpoint=False)
     señal = 0.5 * np.sin(2 * np.pi * frecuencia * t)
     return np.int16(señal * 32767)  # Escalamos a int16 para audio WAV
+
+def crear_senial_prueba(ruta_archivo, frecuencia, duracion, frecuencia_muestreo):
+
+    # Generar la señal
+    senial_audio = generar_senial_senoidal(frecuencia, duracion, frecuencia_muestreo)
+
+    # Guardar la señal como un archivo WAV
+    wavfile.write(ruta_archivo, frecuencia_muestreo, senial_audio)
