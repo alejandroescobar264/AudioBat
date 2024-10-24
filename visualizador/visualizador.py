@@ -2,7 +2,9 @@
 Clase que genera la salida y visualizacion del contenido de la señal
 """
 from modelo.senial import *
+from procesador.procesador import *
 import matplotlib.pyplot as plt
+import os
 
 
 class Visualizador:
@@ -141,3 +143,85 @@ class Visualizador:
         # Guardar figura como PNG
         plt.savefig(self.output_dir / f"{self.filename}_spectrogram_segment.png")
         plt.close()
+    
+    def plot_spectrogram_events_complete(self, event_processor:EventProcessor):
+        """
+        Visualiza el espectrograma del segmento y marca los eventos.
+        Recorta los eventos y los guarda como archivos de audio.
+        """
+        
+        fs = event_processor.fs
+        
+        # Calcular el espectrograma
+        Sxx, freqs, times, im = plt.specgram(event_processor.audio_data, Fs=fs, NFFT=1024, noverlap=512, cmap='binary')
+
+        
+        # Crear figura y ejes
+        fig, ax = plt.subplots(figsize=(10, 4))
+        
+        if event_processor.focus_freq is not None:
+            freq_mask = np.logical_and(freqs >= event_processor.focus_freq[0], freqs <= event_processor.focus_freq[1])
+            plt.pcolormesh(times, freqs[freq_mask], 10 * np.log10(Sxx[freq_mask, :]), shading='gouraud', cmap='binary')
+            plt.ylim(event_processor.focus_freq)  # Limitar las frecuencias visibles al rango de enfoque
+        else:
+            plt.pcolormesh(times, freqs, 10 * np.log10(Sxx), shading='gouraud', cmap='binary')
+        
+        
+        plt.title(f'Spectrogram With Detected Events of $\\bf{{{self.filename}}}$')
+        plt.ylabel('Frecuencia (Hz)')
+        plt.xlabel('Tiempo (s)')
+        plt.colorbar(label='Intensidad (dB)', location='bottom')
+
+        plt.tight_layout()
+
+        # Agregar marcas para los eventos
+        for start_time, end_time in event_processor.events:
+            ax.axvline(x=start_time, color='red', linestyle='--')
+            ax.axvline(x=end_time, color='red', linestyle='--')
+
+        # Crear carpeta de salida basada en el nombre del archivo de audio
+        os.makedirs(self.output_dir/"eventos", exist_ok=True)
+
+        # Guardar la figura
+        plt.savefig(self.output_dir /"eventos"/ f"{self.filename}_spectrogram_events.png")
+        plt.close()
+    
+    
+    def plot_spectrogram_events_single(self, event_processor:EventProcessor):
+        
+        fs = event_processor.fs
+    
+        for i, (start_time, end_time) in enumerate(event_processor.events):
+            # Ajustar el inicio y fin del evento para incluir 10 ms antes y después
+            buffer_ms = 100  # 10 milisegundos
+            adjusted_start_time = max(0, start_time - buffer_ms / 1000)  # Convertir a segundos
+            adjusted_end_time = min(len(event_processor.audio_data) / fs, end_time + buffer_ms / 1000)
+
+            start_index = int(adjusted_start_time * fs)
+            end_index = int(adjusted_end_time * fs)
+            event_audio = event_processor.audio_data[start_index:end_index]
+
+            # Calcular el espectrograma del evento
+            Sxx_event, freqs_event, times_event, im_event = plt.specgram(event_audio, Fs=fs, NFFT=1024, noverlap=512, cmap='binary')
+
+            # Crear una nueva figura para el sub-espectrograma
+            plt.figure()
+            
+            if event_processor.focus_freq is not None:
+                freq_mask = np.logical_and(freqs_event >= event_processor.focus_freq[0], freqs_event <= event_processor.focus_freq[1])
+                plt.pcolormesh(times_event, freqs_event[freq_mask], 10 * np.log10(Sxx_event[freq_mask, :]), shading='gouraud', cmap='binary')
+                plt.ylim(event_processor.focus_freq)  # Limitar las frecuencias visibles al rango de enfoque
+            else:
+                plt.pcolormesh(times_event, freqs_event, 10 * np.log10(Sxx_event), shading='gouraud', cmap='binary')
+            
+            plt.title(f"Espectrograma del evento {i}")
+            plt.ylabel('Frecuencia (Hz)')
+            plt.xlabel('Tiempo (s)')
+            plt.colorbar(label='Intensidad (dB)', location='bottom')
+            plt.tight_layout()
+            
+            # Crear carpeta de salida basada en el nombre del archivo de audio
+            os.makedirs(self.output_dir/"eventos"/"individuales", exist_ok=True)
+        
+            plt.savefig(self.output_dir/"eventos"/"individuales"/ f"espectograma_evento_{i}.png")
+            plt.close()

@@ -38,6 +38,8 @@ class Lanzador:
         os.system("clear")
         print("Versiones de los componentes")
         print(f"modelo: {modelo.__version__}")
+        print(f"visualizador: {visualizador.__version__}")
+        print(f"procesador: {procesador.__version__}")
 
     @staticmethod
     def ejecutar() -> None:
@@ -100,6 +102,12 @@ class Lanzador:
         fft_processor = mi_procesador.FFTProcessor(segmento_senial_filtrada)
         magitudes, frecuencia, frecuencia_muestreo = fft_processor.process()
         
+        print("    |--> Se expande temporalmente")
+        time_expansion_factor = 10
+        time_expansor = mi_procesador.TimeExpander(segmento_senial_filtrada, time_expansion_factor)
+        time_expansor.process()
+        segmento_senial_expandida = time_expansor.get_processed_data()
+        
         # Paso 3 - Se detectan eventos
         print("Inicio - Paso 3 - Detectar Eventos")
         energy_threshold = 1e+6  # Umbral de energía
@@ -118,6 +126,10 @@ class Lanzador:
         mi_visualizador.plot_audio_segment_filtrado(segmento_senial, segmento_senial_filtrada, start_time)
         print("    |--> Guardar espectrograma del segmento")
         mi_visualizador.plot_audio_segment_and_spectrogram(segmento_senial, start_time, focus_freq)
+        print("    |--> Guardar espectrograma con eventos")
+        mi_visualizador.plot_spectrogram_events_complete(event_processor)
+        print("    |--> Guardar espectrograma de cada evento")
+        mi_visualizador.plot_spectrogram_events_single(event_processor)
         print("    |--> Guardar espectro frecuencias")
         mi_visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)
         
