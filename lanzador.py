@@ -102,9 +102,10 @@ class Lanzador:
         
         # Paso 3 - Se detectan eventos
         print("Inicio - Paso 3 - Detectar Eventos")
-        energy_threshold = 1e+7  # Umbral de energía
+        energy_threshold = 1e+6  # Umbral de energía
         min_duration_ms = 20  # Duración mínima de una vocalización en ms
-        event_processor = mi_procesador.EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, ruta_salida, ruta_archivo.stem)
+        focus_freq = (1500,5000)  # Rango de frecuencia para el espectrograma (opcional)
+        event_processor = mi_procesador.EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, focus_freq, ruta_salida, ruta_archivo.stem)
         event_processor.process()
 
         # Paso 4 - Se muestran las seniales
@@ -116,7 +117,6 @@ class Lanzador:
         print("    |--> Guardar segmento filtrado")
         mi_visualizador.plot_audio_segment_filtrado(segmento_senial, segmento_senial_filtrada, start_time)
         print("    |--> Guardar espectrograma del segmento")
-        focus_freq = (1500,5000)  # Rango de frecuencia para el espectrograma (opcional)
         mi_visualizador.plot_audio_segment_and_spectrogram(segmento_senial, start_time, focus_freq)
         print("    |--> Guardar espectro frecuencias")
         mi_visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)

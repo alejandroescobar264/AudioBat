@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt
 from modelo.senial import SenialAudio
 
@@ -194,7 +195,7 @@ class EventProcessor(AudioProcessor):
     """
     Clase para detectar eventos dentro de la señal de audio.
     """
-    def __init__(self, senial_audio: SenialAudio, energy_threshold, min_duration, output_dir, filename):
+    def __init__(self, senial_audio: SenialAudio, energy_threshold, min_duration, focus_freq, output_dir, filename):
         """
         Inicializa el procesador EventProcessor.
 
@@ -209,6 +210,7 @@ class EventProcessor(AudioProcessor):
         self.segment_duration_ms = 6
         self.segment_duration = self.segment_duration_ms / 1000  # Convertir a segundos
         self.min_duration = min_duration
+        self.focus_freq = focus_freq
         self._filename = output_dir / f"{filename}_events.csv"
 
     def process(self) -> None:
@@ -219,10 +221,13 @@ class EventProcessor(AudioProcessor):
         2. Calcula la energía de cada segmento.
         3. Detecta eventos basados en la energía y duración.
         4. Guarda los eventos detectados en un archivo CSV.
+        5. Genera un espectrograma con los eventos marcados
         """
         segments = self._segmentar_audio()
         self._detectar_eventos(segments)
         self._guardar_csv()
+        self._visualizar_eventos()
+            
 
     def _segmentar_audio(self):
         """Divide la señal de audio en segmentos de duración fija."""
@@ -245,7 +250,9 @@ class EventProcessor(AudioProcessor):
                     current_event = [i]
             else:
                 if current_event and i - current_event[0] >= self.min_duration:
-                    self.events.append((current_event[0], i))
+                    start_time = current_event[0] * self.segment_duration
+                    end_time = i * self.segment_duration
+                    self.events.append((start_time, end_time))
                 current_event = None
 
     def _guardar_csv(self):
@@ -260,3 +267,41 @@ class EventProcessor(AudioProcessor):
             data.append([start, end, duration_ms])
         df = pd.DataFrame(data, columns=['Inicio', 'Fin', 'Duración (ms)'])
         df.to_csv(self._filename, index=False)
+    
+    
+    def _visualizar_eventos(self):
+        """
+        Visualiza el espectrograma del segmento y marca los eventos.
+        Recorta los eventos y los guarda como archivos de audio.
+        """
+        # Calcular el espectrograma
+        Sxx, freqs, times, im = plt.specgram(self.audio_data, Fs=self.fs, NFFT=1024, noverlap=512, cmap='binary')
+
+        
+        # Crear figura y ejes
+        fig, ax = plt.subplots(figsize=(10, 4))
+        
+        if self.focus_freq is not None:
+            freq_mask = np.logical_and(freqs >= self.focus_freq[0], freqs <= self.focus_freq[1])
+            plt.pcolormesh(times, freqs[freq_mask], 10 * np.log10(Sxx[freq_mask, :]), shading='gouraud', cmap='binary')
+            plt.ylim(self.focus_freq)  # Limitar las frecuencias visibles al rango de enfoque
+        else:
+            plt.pcolormesh(times, freqs, 10 * np.log10(Sxx), shading='gouraud', cmap='binary')
+        
+        
+        plt.title(f'Spectrogram of Filtered Audio Segment')
+        plt.ylabel('Frecuencia (Hz)')
+        plt.xlabel('Tiempo (s)')
+        plt.colorbar(label='Intensidad (dB)', location='bottom')
+
+        plt.tight_layout()
+
+        # Agregar marcas para los eventos
+        for start_time, end_time in self.events:
+            ax.axvline(x=start_time, color='red', linestyle='--')
+            ax.axvline(x=end_time, color='red', linestyle='--')
+        
+
+        # Guardar la figura
+        plt.savefig("espectograma_con_eventos.png")
+        plt.close()
