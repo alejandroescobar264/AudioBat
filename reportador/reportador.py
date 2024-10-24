@@ -87,9 +87,9 @@ class PDFReportGenerator(ReportGenerator):
             'focus_freq': event_processor.focus_freq
         }
         events = event_processor.events
-
-        # Manejo de eventos como tuplas
-        if isinstance(events[0], tuple):  
+            
+        # Manejo de eventos como tuplas (with empty list handling)
+        if events and isinstance(events[0], tuple):  # Check if events is not empty and first element is a tuple
             events = [{'inicio': e[0], 'fin': e[1]} for e in events]
 
         # Crear el reporte PDF

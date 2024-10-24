@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
+import os
 import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt
 from modelo.senial import SenialAudio
@@ -211,6 +212,7 @@ class EventProcessor(AudioProcessor):
         self.segment_duration = self.segment_duration_ms / 1000  # Convertir a segundos
         self.min_duration = min_duration
         self.focus_freq = focus_freq
+        self._output_dir = output_dir
         self._filename = output_dir /"eventos"/f"{filename}_events.csv"
 
     def process(self) -> None:
@@ -222,6 +224,9 @@ class EventProcessor(AudioProcessor):
         3. Detecta eventos basados en la energía y duración.
         4. Guarda los eventos detectados en un archivo CSV.
         """
+        # Crear carpeta de salida basada en el nombre del archivo de audio
+        os.makedirs(self._output_dir/"eventos", exist_ok=True)
+        
         segments = self._segmentar_audio()
         self._detectar_eventos(segments)
         self._guardar_csv()

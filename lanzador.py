@@ -59,6 +59,7 @@ class Lanzador:
         # Cargar la señal de audio
         
         ruta_archivo = Path("Audio/Grabaciones/AR1/AR1ecAR1303712_20240918_012907.wav")
+        #ruta_archivo = Path("Audio/Grabaciones/AR3/M_molossus.wav")
         senial_audio = modelo.senial.SenialAudioWAV(ruta_archivo)
         
                 
