@@ -3,8 +3,8 @@ from setuptools import setup
 setup(
     name='procesador',
     version='1.0.0',
-    description='Inicio',
-    long_description='prueba vs code',
+    description='Modulo Procesador de Proyecto',
+    long_description='Modulo Procesador para archivos de audio',
     long_description_content_type='text/markdown',
     author='AE',
     author_email='alejandroescoabr264@gmail.com',

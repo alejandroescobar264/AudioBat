@@ -12,6 +12,7 @@ import modelo.senial
 import procesador
 import procesador.procesador
 import visualizador.visualizador
+import reportador.reportador
 
 
 
@@ -40,6 +41,7 @@ class Lanzador:
         print(f"modelo: {modelo.__version__}")
         print(f"visualizador: {visualizador.__version__}")
         print(f"procesador: {procesador.__version__}")
+        print(f"reportador: {reportador.__version__}")
 
     @staticmethod
     def ejecutar() -> None:
@@ -67,10 +69,11 @@ class Lanzador:
         # Se instancian las clases que participan del procesamiento
         mi_procesador = procesador.procesador
         mi_visualizador = visualizador.visualizador.Visualizador(ruta_salida, ruta_archivo.stem)
+        mi_reportador = reportador.reportador
         
         # Mostrar métricas
         print("    |--> Métricas de la señal")
-        senial_audio.metricas()
+        print(senial_audio.metricas())
 
         # Paso 2 - Se procesa la senial adquirida
         print("Inicio - Paso 2 - Procesamiento")
@@ -132,6 +135,15 @@ class Lanzador:
         mi_visualizador.plot_spectrogram_events_single(event_processor)
         print("    |--> Guardar espectro frecuencias")
         mi_visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)
+        
+        # Paso 5 - Generar Reportes
+        print("Inicio - Paso 5 - Generar Reportes")
+        
+        # Crear un objeto de reporte
+        mi_reportador_json = mi_reportador.JSONReportGenerator(ruta_salida)
+
+        # Generar el reporte
+        mi_reportador_json.generate_report(senial_audio, segmentador, filtro_pasa_altos, filtro_pasa_bajos, event_processor)
         
         
 if __name__ == "__main__":

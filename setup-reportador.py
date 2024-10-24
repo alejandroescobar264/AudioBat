@@ -1,14 +1,14 @@
 from setuptools import setup
 
 setup(
-    name='modelo',
+    name='reportador',
     version='1.0.0',
-    description='Modulo de señales del proyecto',
-    long_description='Permite trabajar con objetos de señal',
+    description='Generador de Reportes',
+    long_description='Modulo reportador del proyecto en distintos tipos de archivos',
     long_description_content_type='text/markdown',
     author='AE',
-    author_email='alejandroescobar264@gmail.com',
-    packages=['modelo'],
+    author_email='alejandroescoabr264@gmail.com',
+    packages=['reportador'],
     classifiers=[
         'Programming Language :: Python :: 3',
         'License :: OSI Approved :: MIT License',
