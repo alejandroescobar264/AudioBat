@@ -1,4 +1,5 @@
--e git+https://github.com/alejandroescobar264/AudioBat.git@50196b9448241970cfd688e5960f036b6a798381#egg=AudioBat
+-e git+https://github.com/alejandroescobar264/AudioBat.git@a6ff290d81f3a15de268299cc722195132db0964#egg=AudioBat
+chardet==5.2.0
 contourpy==1.3.0
 cycler==0.12.1
 fonttools==4.54.1
@@ -14,6 +15,7 @@ pyparsing==3.2.0
 pytest==8.3.3
 python-dateutil==2.9.0.post0
 pytz==2024.2
+reportlab==4.2.5
 scipy==1.14.1
 setuptools==75.2.0
 six==1.16.0

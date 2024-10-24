@@ -139,12 +139,18 @@ class Lanzador:
         # Paso 5 - Generar Reportes
         print("Inicio - Paso 5 - Generar Reportes")
         
-        # Crear un objeto de reporte
+        print("    |--> Generar reportes JSON")
+        # Crear un objeto de reporte JSON
         mi_reportador_json = mi_reportador.JSONReportGenerator(ruta_salida)
-
         # Generar el reporte
         mi_reportador_json.generate_report(senial_audio, segmentador, filtro_pasa_altos, filtro_pasa_bajos, event_processor)
-        
+       
+        print("    |--> Generar reportes PDF")
+        # Crear un objeto de reporte PDF
+        mi_reportador_pdf = mi_reportador.PDFReportGenerator(ruta_salida)
+        # Generar el reporte
+        mi_reportador_pdf.generate_report(senial_audio, segmentador, filtro_pasa_altos, filtro_pasa_bajos, event_processor)
+ 
         
 if __name__ == "__main__":
     Lanzador().ejecutar()
