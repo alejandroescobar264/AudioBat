@@ -1,0 +1,50 @@
+{
+    "file_path": "Salidas/AR1ecAR1303712_20240918_012907",
+    "metrics": {
+        "duracion": 344.96,
+        "energia_total": 30104108464.0,
+        "amplitud_maxima": 11704.0,
+        "rango_dinamico_db": 49.2384,
+        "valor_rms": 47.6719
+    },
+    "segment": {
+        "start": 0,
+        "end": 10
+    },
+    "parameters": {
+        "high_pass_cutoff": 2500,
+        "low_pass_cutoff": 5000,
+        "energy_threshold": 1000000.0,
+        "min_duration": 20,
+        "focus_freq": [
+            1500,
+            5000
+        ]
+    },
+    "events": [
+        [
+            0.324,
+            0.456
+        ],
+        [
+            2.79,
+            2.928
+        ],
+        [
+            4.572,
+            4.704
+        ],
+        [
+            6.312,
+            6.456
+        ],
+        [
+            8.004,
+            8.13
+        ],
+        [
+            9.69,
+            9.81
+        ]
+    ]
+}
