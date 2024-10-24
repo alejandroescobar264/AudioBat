@@ -127,7 +127,7 @@ class Visualizador:
         else:
             plt.pcolormesh(times, freqs, 10 * np.log10(Sxx), shading='gouraud', cmap='binary')
 
-        plt.title('Spectrogram of Filtered Audio Segment $\\bf{{{self.filename}}}$')
+        plt.title(f'Spectrogram of Filtered Audio Segment $\\bf{{{self.filename}}}$')
         plt.ylabel('Frecuencia (Hz)')
         plt.xlabel('Tiempo (s)')
         plt.colorbar(label='Intensidad (dB)', location='bottom')

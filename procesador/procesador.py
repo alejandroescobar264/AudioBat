@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import numpy as np
+import pandas as pd
 from scipy.signal import butter, filtfilt
 from modelo.senial import SenialAudio
 
@@ -188,4 +189,74 @@ class FFTProcessor(AudioProcessor):
         self.freqs = fft_freqs[:n//2]
         
         return self._processed_data, self.freqs, self.fs
-    
+
+class EventProcessor(AudioProcessor):
+    """
+    Clase para detectar eventos dentro de la señal de audio.
+    """
+    def __init__(self, senial_audio: SenialAudio, energy_threshold, min_duration, output_dir, filename):
+        """
+        Inicializa el procesador EventProcessor.
+
+        Args:
+            senial_audio: La señal de audio a procesar.
+            energy_threshold: Umbral de energía para la detección de eventos.
+            min_duration: Duración mínima (en segundos) para considerar un evento.
+        """
+        super().__init__(senial_audio)
+        self.events = None
+        self.energy_threshold = energy_threshold
+        self.segment_duration_ms = 6
+        self.segment_duration = self.segment_duration_ms / 1000  # Convertir a segundos
+        self.min_duration = min_duration
+        self._filename = output_dir / f"{filename}_events.csv"
+
+    def process(self) -> None:
+        """
+        Procesa la señal de audio para detectar eventos.
+
+        1. Segmenta la señal en trozos de 6 ms.
+        2. Calcula la energía de cada segmento.
+        3. Detecta eventos basados en la energía y duración.
+        4. Guarda los eventos detectados en un archivo CSV.
+        """
+        segments = self._segmentar_audio()
+        self._detectar_eventos(segments)
+        self._guardar_csv()
+
+    def _segmentar_audio(self):
+        """Divide la señal de audio en segmentos de duración fija."""
+        segment_samples = int(self.segment_duration * self.fs)
+        segments = [self.audio_data[i:i+segment_samples] for i in range(0, len(self.audio_data), segment_samples)]
+        return segments
+
+    def _calcular_energia(self, segment):
+        """Calcula la energía de un segmento de audio."""
+        return np.sum(segment**2)
+
+    def _detectar_eventos(self, segments):
+        """Detecta eventos basados en la energía y duración."""
+        self.events = []
+        current_event = None
+        for i, segment in enumerate(segments):
+            energy = self._calcular_energia(segment)  # Use only the segment argument
+            if energy > self.energy_threshold:
+                if current_event is None:
+                    current_event = [i]
+            else:
+                if current_event and i - current_event[0] >= self.min_duration:
+                    self.events.append((current_event[0], i))
+                current_event = None
+
+    def _guardar_csv(self):
+        """Guarda los eventos en un archivo CSV."""
+        if self.events is None:
+            print("No se detectaron eventos.")
+            return  # Early exit if no events were found
+
+        data = []
+        for start, end in self.events:
+            duration_ms = (end - start) / self.fs * 1000  # Convertir a milisegundos
+            data.append([start, end, duration_ms])
+        df = pd.DataFrame(data, columns=['Inicio', 'Fin', 'Duración (ms)'])
+        df.to_csv(self._filename, index=False)

@@ -100,9 +100,15 @@ class Lanzador:
         fft_processor = mi_procesador.FFTProcessor(segmento_senial_filtrada)
         magitudes, frecuencia, frecuencia_muestreo = fft_processor.process()
         
+        # Paso 3 - Se detectan eventos
+        print("Inicio - Paso 3 - Detectar Eventos")
+        energy_threshold = 1e+7  # Umbral de energía
+        min_duration_ms = 20  # Duración mínima de una vocalización en ms
+        event_processor = mi_procesador.EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, ruta_salida, ruta_archivo.stem)
+        event_processor.process()
 
-        # Paso 3 - Se muestran las seniales
-        print("Inicio - Paso 3 - Mostrar Señales")
+        # Paso 4 - Se muestran las seniales
+        print("Inicio - Paso 4 - Mostrar Señales")
         
         # Visualizar los resultados
         print("    |--> Guardar señal audio completa")
