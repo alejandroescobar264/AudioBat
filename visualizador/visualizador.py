@@ -29,7 +29,8 @@ class Visualizador:
             plt.xlim(0, fs / 2)  # Limitar a la mitad de la frecuencia de muestreo
             plt.grid()
             plt.tight_layout()
-            plt.savefig(self.output_dir / f"{self.filename}_frequency_spectrum.png", dpi=300)
+            file_path = os.path.join(self.output_dir, f"{self.filename}_frequency_spectrum.png")
+            plt.savefig(file_path, dpi=300)
             plt.close()
     
     def plot_audio(self, senial_audio: SenialAudio):
@@ -49,7 +50,8 @@ class Visualizador:
         plt.xlim([audio_times[0], audio_times[-1]])
                             
         # Guardar la figura en formato PNG
-        plt.savefig(self.output_dir / f"{self.filename}_complete_signal.png", dpi=300)
+        file_path = os.path.join(self.output_dir, f"{self.filename}_complete_signal.png")
+        plt.savefig(file_path, dpi=300)
         plt.close()
     
     def plot_audio_segment_filtrado(self, audio_segment, filtered_segment, start_time):
@@ -83,7 +85,8 @@ class Visualizador:
         plt.tight_layout()
 
         # Guardar la figura en formato PNG
-        plt.savefig(self.output_dir / f"{self.filename}_segment_filtered.png", dpi=300)
+        file_path = os.path.join(self.output_dir, f"{self.filename}_segment_filtered.png")
+        plt.savefig(file_path, dpi=300)
         plt.close()
     
 
@@ -141,7 +144,8 @@ class Visualizador:
         
         
         # Guardar figura como PNG
-        plt.savefig(self.output_dir / f"{self.filename}_spectrogram_segment.png")
+        file_path = os.path.join(self.output_dir, f"{self.filename}_spectrogram_segment.png")
+        plt.savefig(file_path, dpi=300)
         plt.close()
     
     def plot_spectrogram_events_complete(self, event_processor:EventProcessor):
@@ -179,11 +183,10 @@ class Visualizador:
             ax.axvline(x=start_time, color='red', linestyle='--')
             ax.axvline(x=end_time, color='red', linestyle='--')
 
-        # Crear carpeta de salida basada en el nombre del archivo de audio
-        os.makedirs(self.output_dir/"eventos", exist_ok=True)
-
         # Guardar la figura
-        plt.savefig(self.output_dir /"eventos"/ f"{self.filename}_spectrogram_events.png")
+        file_path = os.path.join(self.output_dir, f"{self.filename}_spectrogram_events.png")
+        plt.savefig(file_path, dpi=300)
+        
         plt.close()
     
     
@@ -220,8 +223,8 @@ class Visualizador:
             plt.colorbar(label='Intensidad (dB)', location='bottom')
             plt.tight_layout()
             
-            # Crear carpeta de salida basada en el nombre del archivo de audio
-            os.makedirs(self.output_dir/"eventos"/"individuales", exist_ok=True)
         
-            plt.savefig(self.output_dir/"eventos"/"individuales"/ f"espectograma_evento_{i}.png")
+            file_path = os.path.join(self.output_dir, f"espectograma_evento_{i}.png")
+            plt.savefig(file_path, dpi=300)
+            
             plt.close()

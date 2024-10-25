@@ -4,7 +4,6 @@ from modelo.senial import SenialAudioWAV
 from procesador.procesador import HighPassFilter, LowPassFilter, Segmenter
 from visualizador.visualizador import Visualizador
 from reportador.reportador import JSONReportGenerator
-from pathlib import Path
 
 import sys
 import os
@@ -13,12 +12,12 @@ sys.path.append("/Audiobat/src/audiobat")
 
 app = Flask(__name__)
 
-
-app = Flask(__name__)
-
 # Directorio temporal para guardar el archivo subido
 UPLOAD_FOLDER = '/tmp/uploads'
+OUTPUT_FOLDER = '/tmp/output'
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Crea el directorio si no existe
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)  # Crea el directorio si no existe
 
 @app.route('/upload_audio', methods=['POST'])
 def upload_audio():
@@ -31,8 +30,15 @@ def upload_audio():
     file_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(file_path)
 
-    # Procesar el audio
-    process_audio(file_path)
+    # Extract parameters from JSON data
+    #data = request.json
+    #start_time = data.get('start_time', 0)
+    #duration = data.get('duration', 10)
+    #hp_cutoff = data.get('high_pass_cutoff', 2500)
+    #lp_cutoff = data.get('low_pass_cutoff', 5000)
+
+    # Process the audio
+    process_audio(file_path, filename)
 
     # Crear el archivo ZIP con los resultados
     with zipfile.ZipFile('results.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -44,14 +50,8 @@ def upload_audio():
 
 
 @app.route('/process_audio', methods=['POST'])
-def process_audio():
-    data = request.json
-    file_path = Path(data['file_path'])
-    start_time = data.get('start_time', 0)
-    duration = data.get('duration', 10)
-    hp_cutoff = data.get('high_pass_cutoff', 2500)
-    lp_cutoff = data.get('low_pass_cutoff', 5000)
-
+def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500, lp_cutoff=5000):
+   
     # Cargar la señal de audio
     senial_audio = SenialAudioWAV(file_path)
 
@@ -66,8 +66,8 @@ def process_audio():
     lowpass.process()
 
     # Generar gráficos y reporte
-    output_dir = Path('Salidas') / file_path.stem
-    visualizador = Visualizador(output_dir, file_path.stem)
+    output_dir = OUTPUT_FOLDER
+    visualizador = Visualizador(output_dir, filename)
     visualizador.plot_audio(segment)
     report_generator = JSONReportGenerator(output_dir)
     report_generator.generate_report(senial_audio, segmenter, highpass, lowpass)
@@ -77,7 +77,7 @@ def process_audio():
 
 
 if __name__ == '__main__':
-    app.run()
+    app.run(debug=True, port=5000, host='0.0.0.0')
 
 # Ruta para descargar el archivo ZIP
 @app.route('/download_results')
