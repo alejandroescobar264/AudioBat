@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 import zipfile
 from modelo.senial import SenialAudioWAV
-from procesador.procesador import HighPassFilter, LowPassFilter, Segmenter
+from procesador.procesador import HighPassFilter, LowPassFilter, Segmenter, EventProcessor
 from visualizador.visualizador import Visualizador
 from reportador.reportador import JSONReportGenerator
 
@@ -64,13 +64,23 @@ def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500
     highpass.process()
     lowpass = LowPassFilter(highpass.get_processed_data(), lp_cutoff)
     lowpass.process()
-
-    # Generar gráficos y reporte
+    
     output_dir = OUTPUT_FOLDER
+    
+    energy_threshold = 1e+6 
+    min_duration_ms = 20 
+    focus_freq = (1500,5000)
+    event_processor = EventProcessor(segment, energy_threshold, min_duration_ms, focus_freq, output_dir, filename)
+    event_processor.process()
+    
+    # Generar gráficos y reporte
+
     visualizador = Visualizador(output_dir, filename)
     visualizador.plot_audio(segment)
+    visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
+    visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
     report_generator = JSONReportGenerator(output_dir)
-    report_generator.generate_report(senial_audio, segmenter, highpass, lowpass)
+    report_generator.generate_report(senial_audio, segmenter, highpass, lowpass, event_processor)
 
     return jsonify({"status": "success", "message": "Audio processed successfully"})
 
