@@ -2,7 +2,7 @@
 FROM python:3.12-slim
 
 # Establecer el directorio de trabajo
-WORKDIR /app
+WORKDIR /AudioBat
 
 # Instalar Git (si es necesario para descargar dependencias)
 RUN apt-get update && apt-get install -y git
@@ -10,11 +10,15 @@ RUN apt-get update && apt-get install -y git
 # Copiar los archivos necesarios al contenedor
 COPY . .
 
+# Establecer el PYTHONPATH
+ENV PYTHONPATH=/AudioBat/src/audiobat
+
 # Instalar las dependencias
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install -e /AudioBat/src/audiobat
 
 # Exponer el puerto en el que corre Flask
 EXPOSE 5000
 
 # Comando para ejecutar la aplicación (asegúrate de que la ruta sea correcta)
-CMD ["python", "web/app.py"]
+CMD ["python", "app.py"]
