@@ -213,7 +213,7 @@ class EventProcessor(AudioProcessor):
         self.min_duration = min_duration
         self.focus_freq = focus_freq
         self._output_dir = output_dir
-        self._filename = output_dir /"eventos"/f"{filename}_events.csv"
+        self._filename = os.path.join(self._output_dir, f"{filename}_events.csv")
 
     def process(self) -> None:
         """
@@ -224,8 +224,6 @@ class EventProcessor(AudioProcessor):
         3. Detecta eventos basados en la energía y duración.
         4. Guarda los eventos detectados en un archivo CSV.
         """
-        # Crear carpeta de salida basada en el nombre del archivo de audio
-        os.makedirs(self._output_dir/"eventos", exist_ok=True)
         
         segments = self._segmentar_audio()
         self._detectar_eventos(segments)
