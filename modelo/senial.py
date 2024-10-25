@@ -87,10 +87,10 @@ class SenialAudioWAV(SenialAudio):
     # Función para calcular métricas del archivo de audio
     def metricas(self):
         duracion = self.obtener_duracion()
-        energy = np.sum(self.datos**2)  # Energía total de la señal
+        energy = np.sum(self.datos.astype(np.float64) ** 2)  # Energía total de la señal
         max_amplitude = np.max(np.abs(self.datos))  # Amplitud máxima
         dynamic_range = 20 * np.log10(max_amplitude / np.mean(np.abs(self.datos)))  # Rango dinámico en dB
-        rms = np.sqrt(np.mean(self.datos**2))  # Valor RMS de la señal
+        rms = np.sqrt(np.mean(self.datos.astype(np.float64)**2))  # Valor RMS de la señal
 
         #print(f"        Duración: {duracion:.2f} segundos")
         #print(f"        Energía total: {energy:.2e}")

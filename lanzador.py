@@ -67,6 +67,10 @@ class Lanzador:
         ruta_salida = Path("Salidas") / ruta_archivo.stem
         os.makedirs(ruta_salida, exist_ok=True)
         
+        # Crear carpeta de eventos basada en el nombre del archivo de audio
+        ruta_eventos = Path("Salidas") / ruta_archivo.stem / Path("eventos")
+        os.makedirs(ruta_eventos, exist_ok=True)
+        
         # Se instancian las clases que participan del procesamiento
         mi_procesador = procesador.procesador
         mi_visualizador = visualizador.visualizador.Visualizador(ruta_salida, ruta_archivo.stem)
@@ -117,7 +121,7 @@ class Lanzador:
         energy_threshold = 1e+6  # Umbral de energía
         min_duration_ms = 20  # Duración mínima de una vocalización en ms
         focus_freq = (1500,5000)  # Rango de frecuencia para el espectrograma (opcional)
-        event_processor = mi_procesador.EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, focus_freq, ruta_salida, ruta_archivo.stem)
+        event_processor = mi_procesador.EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, focus_freq, ruta_eventos, ruta_archivo.stem)
         event_processor.process()
 
         # Paso 4 - Se muestran las seniales
