@@ -76,10 +76,10 @@ def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500
     # Generar gráficos y reporte
 
     visualizador = Visualizador(output_dir, filename)
-    visualizador.plot_audio(segment)
-    visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
-    visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
-    report_generator = JSONReportGenerator(output_dir)
+    visualizador.plot_audio_ascii(segment)
+    #visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
+    #visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
+    report_generator = JSONReportGenerator(output_dir, filename)
     report_generator.generate_report(senial_audio, segmenter, highpass, lowpass, event_processor)
 
     return jsonify({"status": "success", "message": "Audio processed successfully"})

@@ -19,12 +19,13 @@ class ReportGenerator(ABC):
 
 class JSONReportGenerator(ReportGenerator):
     
-    def __init__(self, output_dir):
+    def __init__(self, output_dir, filename):
         """
         Inicializa el procesador FFTProcessor.
         
         """
         super().__init__(output_dir)
+        self._filename = os.path.join(self.output_dir, f"{filename}_report.json")
         
     
     def generate_report(self, senial_audio: SenialAudio, segmenter:Segmenter, filtro_hp:HighPassFilter, 
@@ -58,7 +59,7 @@ class JSONReportGenerator(ReportGenerator):
         }
 
         # Guardar el reporte en un archivo JSON
-        with open(f"{self.output_dir}/{self.output_dir.stem}_report.json", "w") as f:
+        with open(self._filename, "w") as f:
             json.dump(report, f, indent=4)
 
 

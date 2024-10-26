@@ -1,4 +1,4 @@
--e git+https://github.com/alejandroescobar264/AudioBat.git@a7395b5045be8c03d9e514a4a018d215574e2a97#egg=AudioBat
+-e git+https://github.com/alejandroescobar264/AudioBat.git@289b328eb800b1e9fdc2aa888cbd04383cd8f5b5#egg=AudioBat
 blinker==1.8.2
 chardet==5.2.0
 click==8.1.7
@@ -16,6 +16,7 @@ numpy==2.1.2
 packaging==24.1
 pandas==2.2.3
 pillow==11.0.0
+plotille==5.0.0
 pluggy==1.5.0
 pyparsing==3.2.0
 pytest==8.3.3

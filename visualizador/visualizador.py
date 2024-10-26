@@ -4,6 +4,7 @@ Clase que genera la salida y visualizacion del contenido de la señal
 from modelo.senial import *
 from procesador.procesador import *
 import matplotlib.pyplot as plt
+import plotille
 import os
 
 
@@ -228,3 +229,24 @@ class Visualizador:
             plt.savefig(file_path, dpi=300)
             
             plt.close()
+    
+    def plot_audio_ascii(self, senial_audio: SenialAudio):
+        """
+        Grafica la señal de audio completa en la consola usando ASCII.
+        """
+        print("GRAFICANDO")
+        audio_times = np.arange(len(senial_audio.datos)) / senial_audio.frecuencia_muestreo
+
+        # Crear la gráfica ASCII
+        ascii_plot = plotille.plot(
+            audio_times,
+            senial_audio.datos,
+            width=80,  # Ancho de la gráfica en caracteres
+            height=20,  # Alto de la gráfica en caracteres
+            X_label='Tiempo (s)',
+            Y_label='Amplitud',
+            title=f'Audio Signal {self.filename} (Complete)'
+        )
+
+        # Imprimir la gráfica ASCII en la consola
+        print(ascii_plot)
