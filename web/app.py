@@ -33,11 +33,13 @@ def upload_audio():
     # Process the audio
     ascii_plot = process_audio(file_path, filename)
 
-    # Crear el archivo ZIP con los resultados
-    with zipfile.ZipFile('results.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
+    # Crear el archivo ZIP con los resultados en OUTPUT_FOLDER
+    zip_path = os.path.join(OUTPUT_FOLDER, 'results.zip')
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for root, dirs, files in os.walk(OUTPUT_FOLDER):
             for file in files:
-                zipf.write(OUTPUT_FOLDER)
+                file_path = os.path.join(root, file)
+                zipf.write(file_path, os.path.relpath(file_path, OUTPUT_FOLDER))
 
     return jsonify({
         'status': 'success',
@@ -84,16 +86,17 @@ def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500
 
     return jsonify({"status": "success", "message": "Audio processed successfully"})
 
+# Ruta para descargar el archivo ZIP
+@app.route('/download_results')
+def download_results():
+    zip_path = os.path.join(OUTPUT_FOLDER, 'results.zip')
+    try:
+        return send_from_directory(OUTPUT_FOLDER, 'results.zip', as_attachment=True)
+    except FileNotFoundError:
+        return jsonify({'error': 'Results ZIP not found'}), 404
 
 
 
 if __name__ == '__main__':
     app.run(debug=True, port=5000, host='0.0.0.0')
 
-# Ruta para descargar el archivo ZIP
-@app.route('/download_results')
-def download_results():
-    try:
-        return send_from_directory('', 'results.zip', as_attachment=True)
-    except FileNotFoundError:
-        return jsonify({'error': 'Results ZIP not found'}), 404
