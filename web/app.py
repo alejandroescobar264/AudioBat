@@ -97,5 +97,4 @@ def download(audio_filename):
         return jsonify({'error': 'Archivo ZIP no encontrado'}), 404
 
 if __name__ == '__main__':
-    app.name("AudioBat")
     app.run(debug=True, host='0.0.0.0', port=5000)
