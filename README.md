@@ -36,7 +36,9 @@ curl -X POST -F "audio_file=@/home/alejandro/Documentos/github_repos/AudioBat/Au
 
 Para descargar los resultados:
 ```
-curl -X GET http://localhost:5000/download_results --output /home/alejandro/Descargas/results.zip
+curl -X GET http://localhost:5000/download_results/AR1ecAR1303712_20240918_012907.wav --output /home/alejandro/Descargas/AR1ecAR1303712_20240918_012907.zip
+
+
 ```
 
 Para abordar este trabajo vamos a centrarnos en los requerimientos funcionales clave:
