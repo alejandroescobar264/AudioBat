@@ -72,9 +72,6 @@ def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500
     event_processor = EventProcessor(segment, energy_threshold, min_duration_ms, focus_freq, output_dir, filename)
     event_processor.process()
     
-    # Procesar el audio y obtener la gráfica ASCII
-    ascii_plot = process_audio(file_path, filename)
-    
     # Generar gráficos y reporte
 
     visualizador = Visualizador(output_dir, filename)
