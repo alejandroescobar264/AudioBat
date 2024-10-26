@@ -1,4 +1,5 @@
--e git+https://github.com/alejandroescobar264/AudioBat.git@289b328eb800b1e9fdc2aa888cbd04383cd8f5b5#egg=AudioBat
+#-e git+https://github.com/alejandroescobar264/AudioBat.git@289b328eb800b1e9fdc2aa888cbd04383cd8f5b5#egg=AudioBat
+-e git+https://github.com/alejandroescobar264/AudioBat.git@AudioBat-web#egg=AudioBat
 blinker==1.8.2
 chardet==5.2.0
 click==8.1.7

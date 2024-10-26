@@ -245,7 +245,6 @@ class Visualizador:
             height=20,  # Alto de la gráfica en caracteres
             X_label='Tiempo (s)',
             Y_label='Amplitud',
-            title=f'Audio Signal {self.filename} (Complete)'
         )
 
         # Imprimir la gráfica ASCII en la consola
