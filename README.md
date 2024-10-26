@@ -5,12 +5,21 @@ Librería para procesar registros activos de llamadas de ecolocalización de mur
 > Este es un TP integrador para Ingeniería de Software II.[^1]
 
 
-<mark>Para acceder al servicio web visite:
 
-[[http://localhost:5000/](http://localhost:5000/)]
-
+Para acceder al servicio web visite: http://localhost:5000/
 
 
+
+Descargar el repositorio:
+```
+docker pull ghcr.io/alejandroescobar264/audiobat:web
+```
+
+
+Correr el repo de github:
+```
+docker run -d -p 5000:5000 --name audiobat-web ghcr.io/alejandroescobar264/audiobat:web
+```
 
 
 Para instalar los requerimientos emplear el comando:
