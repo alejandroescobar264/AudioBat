@@ -4,6 +4,15 @@ Librería para procesar registros activos de llamadas de ecolocalización de mur
 > [!NOTE]
 > Este es un TP integrador para Ingeniería de Software II.[^1]
 
+
+<mark>Para acceder al servicio web visite:
+
+[[http://localhost:5000/](http://localhost:5000/)]
+
+
+
+
+
 Para instalar los requerimientos emplear el comando:
 
 ```
@@ -13,6 +22,7 @@ pip install -r requirements.txt
 > [!WARNING]
 > Para hacer andar las importaciones en VS Code se deben instalar los modulos con el comando:
 > ``` pip install -e . ```
+
 
 Para eliminar cache de docker:
 ```
