@@ -34,12 +34,12 @@ def upload_audio():
     process_audio(file_path, filename)
 
     # Crear el archivo ZIP con los resultados en OUTPUT_FOLDER
-    zip_path = os.path.join(OUTPUT_FOLDER, 'results.zip')
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(OUTPUT_FOLDER):
-            for file in files:
-                file_path = os.path.join(root, file)
-                zipf.write(file_path, os.path.relpath(file_path, OUTPUT_FOLDER))
+    #zip_path = os.path.join(OUTPUT_FOLDER, 'results.zip')
+    #with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+    #    for root, dirs, files in os.walk(OUTPUT_FOLDER):
+    #        for file in files:
+    #            file_path = os.path.join(root, file)
+    #            zipf.write(file_path, os.path.relpath(file_path, OUTPUT_FOLDER))
 
     return jsonify({
         'status': 'success',
@@ -78,8 +78,9 @@ def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500
     # Generar gráficos y reporte
 
     visualizador = Visualizador(output_dir, filename)
-    visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
-    visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
+    visualizador.plot_audio(segment)
+    #visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
+    #visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
     report_generator = JSONReportGenerator(output_dir, filename)
     report_generator.generate_report(senial_audio, segmenter, highpass, lowpass, event_processor)
 
