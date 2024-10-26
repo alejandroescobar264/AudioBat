@@ -1,7 +1,7 @@
 from flask import Flask, request, jsonify, send_from_directory
 import zipfile
 from modelo.senial import SenialAudioWAV
-from procesador.procesador import HighPassFilter, LowPassFilter, Segmenter, EventProcessor
+from procesador.procesador import HighPassFilter, LowPassFilter, Segmenter, FFTProcessor, EventProcessor
 from visualizador.visualizador import Visualizador
 from reportador.reportador import JSONReportGenerator
 
@@ -73,17 +73,22 @@ def process_audio(file_path, filename, output_dir, start_time=0, duration=10, hp
     
     segmento_senial_filtrada = lowpass.get_processed_data()
     
-    energy_threshold = 1e+6 
+    energy_threshold = 1e+6
     min_duration_ms = 20 
     focus_freq = (1500, 5000)
-    event_processor = EventProcessor(segment, energy_threshold, min_duration_ms, focus_freq, output_dir, filename)
+    event_processor = EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, focus_freq, output_dir, filename)
     event_processor.process()
+    
+    fft_processor = FFTProcessor(segmento_senial_filtrada)
+    magitudes, frecuencia, frecuencia_muestreo = fft_processor.process()
     
     # Generar gráficos y reporte
     visualizador = Visualizador(output_dir, filename)
     visualizador.plot_audio(senial_audio)
     visualizador.plot_audio_segment_filtrado(segment, segmento_senial_filtrada, start_time)
     visualizador.plot_audio_segment_and_spectrogram(segmento_senial_filtrada, start_time, focus_freq=(1500, 5000))
+    visualizador.plot_spectrogram_events_complete(event_processor)
+    visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)
     report_generator = JSONReportGenerator(output_dir, filename)
     report_generator.generate_report(senial_audio, segmenter, highpass, lowpass, event_processor)
 
