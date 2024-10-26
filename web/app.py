@@ -31,7 +31,7 @@ def upload_audio():
     file.save(file_path)
 
     # Process the audio
-    ascii_plot = process_audio(file_path, filename)
+    process_audio(file_path, filename)
 
     # Crear el archivo ZIP con los resultados en OUTPUT_FOLDER
     zip_path = os.path.join(OUTPUT_FOLDER, 'results.zip')
@@ -78,9 +78,8 @@ def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500
     # Generar gráficos y reporte
 
     visualizador = Visualizador(output_dir, filename)
-    ascii_plot = visualizador.plot_audio_ascii(segment)
-    #visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
-    #visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
+    visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
+    visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
     report_generator = JSONReportGenerator(output_dir, filename)
     report_generator.generate_report(senial_audio, segmenter, highpass, lowpass, event_processor)
 
