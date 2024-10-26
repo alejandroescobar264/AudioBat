@@ -61,6 +61,11 @@ Para abordar este trabajo vamos a centrarnos en los requerimientos funcionales c
     - El sistema debe generar reportes automáticos con los resultados del análisis de audio, identificando especies de murciélagos y tipos de llamadas.
     - Los reportes deben estar disponibles en formatos utilizables (PDF, CSV).
 
+5. **Acceso a través de red local**
+    - El modulo debe de poder usado como un servicio de la red local.
+    - Debe poder enviarse un archivo y poder descargar los resultados.
+    - Se debe implementar para desplegarse en un server.
+
 
 
 [^1]: Facultad de Ingeniería de la Universidad Nacional de Entre Ríos (FIUNER).
