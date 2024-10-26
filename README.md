@@ -1,4 +1,12 @@
 # AudioBat
+
+![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white)
+![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54)
+![Docker](https://img.shields.io/badge/docker-%230db7ed.svg?style=for-the-badge&logo=docker&logoColor=white)
+![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)
+
+
+
 Librería para procesar registros activos de llamadas de ecolocalización de murciélagos en ambientes con interferencia por ruido ultrasónico de origen antrópico. 
 
 > [!NOTE]
