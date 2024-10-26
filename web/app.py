@@ -30,23 +30,20 @@ def upload_audio():
     file_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(file_path)
 
-    # Extract parameters from JSON data
-    #data = request.json
-    #start_time = data.get('start_time', 0)
-    #duration = data.get('duration', 10)
-    #hp_cutoff = data.get('high_pass_cutoff', 2500)
-    #lp_cutoff = data.get('low_pass_cutoff', 5000)
-
     # Process the audio
-    process_audio(file_path, filename)
+    ascii_plot = process_audio(file_path, filename)
 
     # Crear el archivo ZIP con los resultados
     with zipfile.ZipFile('results.zip', 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk('Salidas'):
+        for root, dirs, files in os.walk(OUTPUT_FOLDER):
             for file in files:
-                zipf.write(os.path.join(root, file), os.path.relpath(os.path.join(root, file), 'Salidas'))
+                zipf.write(OUTPUT_FOLDER)
 
-    return jsonify({'status': 'success', 'message': 'Audio processed and results zipped'})
+    return jsonify({
+        'status': 'success',
+        'message': 'Audio processed and results zipped'
+        })
+    
 
 
 @app.route('/process_audio', methods=['POST'])
@@ -73,16 +70,20 @@ def process_audio(file_path, filename, start_time=0, duration=10, hp_cutoff=2500
     event_processor = EventProcessor(segment, energy_threshold, min_duration_ms, focus_freq, output_dir, filename)
     event_processor.process()
     
+    # Procesar el audio y obtener la gráfica ASCII
+    ascii_plot = process_audio(file_path, filename)
+    
     # Generar gráficos y reporte
 
     visualizador = Visualizador(output_dir, filename)
-    visualizador.plot_audio_ascii(segment)
+    ascii_plot = visualizador.plot_audio_ascii(segment)
     #visualizador.plot_audio_segment_filtrado(segment, segment, start_time)
     #visualizador.plot_audio_segment_and_spectrogram(segment, start_time, focus_freq=(1500,5000))
     report_generator = JSONReportGenerator(output_dir, filename)
     report_generator.generate_report(senial_audio, segmenter, highpass, lowpass, event_processor)
 
     return jsonify({"status": "success", "message": "Audio processed successfully"})
+
 
 
 

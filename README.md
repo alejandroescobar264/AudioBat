@@ -14,6 +14,11 @@ pip install -r requirements.txt
 > Para hacer andar las importaciones en VS Code se deben instalar los modulos con el comando:
 > ``` pip install -e . ```
 
+Para eliminar cache de docker:
+'''
+docker builder prune -a
+'''
+
 Para construir el contenedor de docker:
 ```
 docker build -t audiobat-web .
@@ -24,7 +29,7 @@ Para lanzar el contenedor en el puerto 5000
 docker run -p 5000:5000 audiobat-web
 ```
 
-Para procesar archivos en el contenedor:
+Para subir archivos en el contenedor:
 ```
 curl -X POST -F "audio_file=@/home/alejandro/Documentos/github_repos/AudioBat/Audio/Grabaciones/AR1/AR1ecAR1303712_20240918_012907.wav"  http://localhost:5000/upload_audio
 ```
