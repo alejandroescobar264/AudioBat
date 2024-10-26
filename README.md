@@ -15,9 +15,9 @@ pip install -r requirements.txt
 > ``` pip install -e . ```
 
 Para eliminar cache de docker:
-'''
+```
 docker builder prune -a
-'''
+```
 
 Para construir el contenedor de docker:
 ```
