@@ -1,110 +1,101 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, request, jsonify, send_from_directory, render_template, redirect, url_for
 import zipfile
+import os
+import sys
+
+# Importa tus módulos según tu estructura de proyecto
 from modelo.senial import SenialAudioWAV
 from procesador.procesador import HighPassFilter, LowPassFilter, Segmenter, FFTProcessor, EventProcessor
 from visualizador.visualizador import Visualizador
 from reportador.reportador import JSONReportGenerator
 
-import sys
-import os
-
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
-sys.path.append("/Audiobat/src/audiobat")
-
 app = Flask(__name__)
 
-# Directorio temporal para guardar el archivo subido
+# Directorios de trabajo
 UPLOAD_FOLDER = '/tmp/uploads'
 OUTPUT_FOLDER = '/tmp/output'
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+os.makedirs(OUTPUT_FOLDER, exist_ok=True)
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # Crea el directorio si no existe
-os.makedirs(OUTPUT_FOLDER, exist_ok=True)  # Crea el directorio si no existe
+@app.route('/')
+def home():
+    # Ruta para la interfaz de inicio
+    return render_template('index.html')
 
-@app.route('/upload_audio', methods=['POST'])
-def upload_audio():
+@app.route('/upload', methods=['POST'])
+def upload():
     if 'audio_file' not in request.files:
-        return jsonify({'error': 'No file part'}), 400
-
-    # Guardar el archivo en el directorio temporal
+        return jsonify({'error': 'No se encontró el archivo'}), 400
     file = request.files['audio_file']
-    filename = file.filename  # Asegurar el nombre del archivo
+    filename = file.filename
     file_path = os.path.join(UPLOAD_FOLDER, filename)
     file.save(file_path)
-
-    # Crear una carpeta específica para los resultados basada en el nombre del archivo (sin la extensión)
-    output_subfolder = os.path.join(OUTPUT_FOLDER, os.path.splitext(filename)[0])
-    os.makedirs(output_subfolder, exist_ok=True)  # Crea el subdirectorio si no existe
-
-    # Procesar el audio
-    process_audio(file_path, filename, output_subfolder)
-
-    # Crear el archivo ZIP con los resultados en OUTPUT_FOLDER
-    zip_filename = os.path.splitext(filename)[0] + '.zip'  # Nombre del ZIP basado en el archivo de audio
-    zip_path = os.path.join(OUTPUT_FOLDER, zip_filename)
     
-    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for root, dirs, files in os.walk(output_subfolder):
-            for file in files:
-                file_path = os.path.join(root, file)
-                # Evitar incluir el propio archivo ZIP
-                if file != zip_filename:
-                    zipf.write(file_path, os.path.relpath(file_path, output_subfolder))
+    # Crear subdirectorio de salida
+    output_subfolder = os.path.join(OUTPUT_FOLDER, os.path.splitext(filename)[0])
+    os.makedirs(output_subfolder, exist_ok=True)
+    
+    # Procesar el archivo
+    process_audio(file_path, filename, output_subfolder)
+    
+    # Redirigir a la página de descarga después de procesar
+    return redirect(url_for('download', audio_filename=filename))
 
-    return jsonify({
-        'status': 'success',
-        'message': f'Audio processed and results zipped as {zip_filename}'
-    })
-
-@app.route('/process_audio', methods=['POST'])
 def process_audio(file_path, filename, output_dir, start_time=0, duration=10, hp_cutoff=2500, lp_cutoff=5000):
-   
-    # Cargar la señal de audio
+    # Procesa la señal de audio (código igual al que ya tienes)
     senial_audio = SenialAudioWAV(file_path)
-
-    # Procesar la señal
     segmenter = Segmenter(senial_audio, start_time, duration)
     segmenter.process()
     segment = segmenter.get_processed_data()
 
+    # Filtrado y procesamiento
     highpass = HighPassFilter(segment, hp_cutoff)
     highpass.process()
     lowpass = LowPassFilter(highpass.get_processed_data(), lp_cutoff)
     lowpass.process()
-    
     segmento_senial_filtrada = lowpass.get_processed_data()
     
+    # Detección de eventos
     energy_threshold = 1e+6
     min_duration_ms = 20 
     focus_freq = (1500, 5000)
     event_processor = EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, focus_freq, output_dir, filename)
     event_processor.process()
     
+    # Procesamiento FFT
     fft_processor = FFTProcessor(segmento_senial_filtrada)
     magitudes, frecuencia, frecuencia_muestreo = fft_processor.process()
     
-    # Generar gráficos y reporte
+    # Visualización y reporte
     visualizador = Visualizador(output_dir, filename)
     visualizador.plot_audio(senial_audio)
     visualizador.plot_audio_segment_filtrado(segment, segmento_senial_filtrada, start_time)
     visualizador.plot_audio_segment_and_spectrogram(segmento_senial_filtrada, start_time, focus_freq=(1500, 5000))
     visualizador.plot_spectrogram_events_complete(event_processor)
     visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)
+    
+    # Generación de reporte JSON
     report_generator = JSONReportGenerator(output_dir, filename)
     report_generator.generate_report(senial_audio, segmenter, highpass, lowpass, event_processor)
 
-    return jsonify({"status": "success", "message": "Audio processed successfully"})
-
-# Ruta para descargar el archivo ZIP
-@app.route('/download_results/<string:audio_filename>')
-def download_results(audio_filename):
-    zip_filename = os.path.splitext(audio_filename)[0] + '.zip'  # Nombre del ZIP basado en el archivo de audio
+@app.route('/download/<string:audio_filename>')
+def download(audio_filename):
+    zip_filename = os.path.splitext(audio_filename)[0] + '.zip'
     zip_path = os.path.join(OUTPUT_FOLDER, zip_filename)
+    
+    # Comprime el directorio de salida en un archivo ZIP
+    output_subfolder = os.path.join(OUTPUT_FOLDER, os.path.splitext(audio_filename)[0])
+    with zipfile.ZipFile(zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for root, dirs, files in os.walk(output_subfolder):
+            for file in files:
+                file_path = os.path.join(root, file)
+                zipf.write(file_path, os.path.relpath(file_path, output_subfolder))
     
     try:
         return send_from_directory(OUTPUT_FOLDER, zip_filename, as_attachment=True)
     except FileNotFoundError:
-        return jsonify({'error': 'Results ZIP not found'}), 404
+        return jsonify({'error': 'Archivo ZIP no encontrado'}), 404
 
 if __name__ == '__main__':
-    app.name = "Audiobat"
-    app.run(debug=True, port=5000, host='0.0.0.0')
+    app.name("AudioBat")
+    app.run(debug=True, host='0.0.0.0', port=5000)
