@@ -26,10 +26,15 @@
             color: #0073e6;
             text-align: center; /* Centrar títulos y subtítulos */
         }
+        .logo-container {
+            display: flex; /* Usar flexbox para alinear el logo y el texto */
+            align-items: center; /* Centrar verticalmente */
+            justify-content: center; /* Centrar horizontalmente */
+            margin-bottom: 20px; /* Espacio debajo del contenedor */
+        }
         .logo {
-            display: block;
-            margin: 10px auto;
-            width: 100px;
+            width: 100px; /* Ajustar el tamaño del logo */
+            margin-right: 10px; /* Espacio entre el logo y el texto */
         }
         input[type="file"] {
             margin: 10px 0;
@@ -84,8 +89,10 @@
 </head>
 <body>
     <div class="container">
-        <h1>AudioBat</h1>
-        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo de AudioBat" class="logo">
+        <div class="logo-container">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo de AudioBat" class="logo">
+            <h1>AudioBat</h1>
+        </div>
         <h2>Subir archivo de audio para procesar</h2>
         <form id="uploadForm" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
             <input type="file" name="audio_file" required>
