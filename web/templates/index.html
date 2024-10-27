@@ -24,15 +24,12 @@
         }
         h1, h2, h3 {
             color: #0073e6;
-            text-align: center;
+            text-align: center; /* Centrar títulos y subtítulos */
         }
-        .logo-container {
-            text-align: center;
-            margin-top: 10px;
-        }
-        .logo-container img {
-            max-width: 100px; /* Ajusta el tamaño del logo */
-            height: auto;
+        .logo {
+            display: block;
+            margin: 10px auto;
+            width: 100px;
         }
         input[type="file"] {
             margin: 10px 0;
@@ -88,9 +85,7 @@
 <body>
     <div class="container">
         <h1>AudioBat</h1>
-        <div class="logo-container">
-            <img src="logo.png" alt="Logo de AudioBat">
-        </div>
+        <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Logo de AudioBat" class="logo">
         <h2>Subir archivo de audio para procesar</h2>
         <form id="uploadForm" action="{{ url_for('upload') }}" method="post" enctype="multipart/form-data">
             <input type="file" name="audio_file" required>
@@ -115,6 +110,120 @@
         </div>
     </div>
 
-    <!-- Script de funcionalidad omitido para claridad -->
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+        const downloadForm = document.getElementById('downloadForm');
+        const fileList = document.getElementById('fileList');
+        let interval;
+
+        uploadForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const formData = new FormData(uploadForm);
+            const xhr = new XMLHttpRequest();
+
+            xhr.open('POST', uploadForm.action, true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    const filename = response.filename;
+
+                    // Mostrar barra de progreso
+                    progressContainer.style.display = 'block';
+
+                    // Iniciar actualización del progreso
+                    interval = setInterval(function() {
+                        checkProgress(filename);
+                    }, 1000);
+                } else {
+                    alert('Error al subir el archivo');
+                }
+            };
+            xhr.send(formData);
+        });
+
+        function checkProgress(filename) {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/progress/' + filename, true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const progressData = JSON.parse(xhr.responseText);
+                    progressBar.style.width = progressData.progress + '%';
+
+                    if (progressData.status === 'completed') {
+                        clearInterval(interval);
+                        progressBar.style.width = '100%';
+                        alert('Procesamiento completado. Descargando archivo ZIP...');
+                        downloadForm.action = '/download/' + filename;
+                        downloadForm.style.display = 'block';
+                        downloadForm.querySelector('#filename').value = filename;
+                        downloadForm.submit();
+                    }
+                }
+            };
+            xhr.send();
+        }
+
+        function loadFileList() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/files', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const files = JSON.parse(xhr.responseText);
+                    fileList.innerHTML = '';
+                    files.forEach(function(file) {
+                        const li = document.createElement('li');
+                        li.textContent = file;
+
+                        const downloadButton = document.createElement('button');
+                        downloadButton.textContent = 'Descargar';
+                        downloadButton.onclick = function() {
+                            window.location.href = '/download/' + file;
+                        };
+
+                        li.appendChild(downloadButton);
+                        fileList.appendChild(li);
+                    });
+                }
+            };
+            xhr.send();
+        }
+
+        window.onload = function() {
+            loadAvailableFiles();
+        };
+
+        function loadAvailableFiles() {
+            const xhr = new XMLHttpRequest();
+            xhr.open('GET', '/available_files', true);
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const files = JSON.parse(xhr.responseText);
+                    const fileList = document.getElementById('fileList');
+                    fileList.innerHTML = '';
+
+                    files.forEach(function(filename) {
+                        const li = document.createElement('li');
+                        li.textContent = filename;
+
+                        const downloadButton = document.createElement('button');
+                        downloadButton.textContent = 'Descargar';
+                        downloadButton.onclick = function() {
+                            window.location.href = '/download/' + filename;
+                        };
+
+                        li.appendChild(downloadButton);
+                        fileList.appendChild(li);
+                    });
+                } else {
+                    console.error('Error al cargar los archivos disponibles');
+                }
+            };
+            xhr.send();
+        }
+
+        loadFileList();
+    </script>
 </body>
 </html>
