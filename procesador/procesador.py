@@ -2,7 +2,6 @@ from abc import ABC, abstractmethod
 import numpy as np
 import pandas as pd
 import os
-import matplotlib.pyplot as plt
 from scipy.signal import butter, filtfilt
 from modelo.senial import SenialAudio
 
