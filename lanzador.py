@@ -4,29 +4,29 @@ __date__ = '2024/10/22'
 __author_email__ = 'alejandroescobar264@gmail.com'
 
 """
-Las responsabilidades se dividen entre diferentes clases separadas en diferentes módulos a implementar.
+Este módulo implementa el programa principal de la aplicación.
+Su responsabilidad es gestionar las operaciones de carga de señal, procesamiento, visualización y generación de reportes.
+Las funcionalidades están divididas en diferentes módulos, cada uno con una responsabilidad específica.
 """
+
 import os
 from pathlib import Path
-import modelo.senial
-import procesador
-import procesador.procesador
-import visualizador.visualizador
-import reportador.reportador
-
+import modelo.senial  # Importa las clases para manejo de señales
+import procesador  # Importa el módulo para procesar las señales
+import procesador.procesador  # Importa los procesadores específicos
+import visualizador.visualizador  # Importa el visualizador de datos
+import reportador.reportador  # Importa el generador de reportes
 
 
 class Lanzador:
     """
-    Programa Lanzador
+    Clase principal del programa, gestiona la ejecución del flujo de análisis.
     """
 
     @staticmethod
     def tecla() -> None:
         """
-        Función que solicita al usuario presionar cualquier tecla para continuar.
-
-        Esta función espera cualquier entrada del usuario y luego limpia la pantalla.
+        Solicita al usuario presionar cualquier tecla para continuar y limpia la pantalla.
         """
         input("Presione cualquier tecla para continuar...")
         os.system('clear')
@@ -34,7 +34,7 @@ class Lanzador:
     @staticmethod
     def informar_versiones() -> None:
         """
-        Informa las versiones de los componentes
+        Informa las versiones de los componentes utilizados en el proyecto.
         """
         os.system("clear")
         print("Versiones de los componentes")
@@ -46,58 +46,53 @@ class Lanzador:
     @staticmethod
     def ejecutar() -> None:
         """
-        Programa principal
+        Ejecuta el flujo principal de procesamiento de la señal de audio.
         """
-        # Se prepara el programa
+        # Mostrar versiones y esperar entrada del usuario
         Lanzador.informar_versiones()
         Lanzador.tecla()
 
-
         os.system("clear")
         print("Inicio - Paso 1 - Carga de la señal")
-        # Paso 1 - Se carga la senial
-        # Cargar la señal de audio
         
+        # Carga la señal de audio desde un archivo especificado
         ruta_archivo = Path("Audio/Grabaciones/AR1/AR1ecAR1303712_20240918_012907.wav")
-        #ruta_archivo = Path("Audio/Grabaciones/AR3/M_molossus.wav")
         senial_audio = modelo.senial.SenialAudioWAV(ruta_archivo)
         
-                
-        # Crear carpeta de salida basada en el nombre del archivo de audio
+        # Configura las rutas de salida
         ruta_salida = Path("Salidas") / ruta_archivo.stem
         os.makedirs(ruta_salida, exist_ok=True)
         
-        # Crear carpeta de eventos basada en el nombre del archivo de audio
         ruta_eventos = Path("Salidas") / ruta_archivo.stem / Path("eventos")
         os.makedirs(ruta_eventos, exist_ok=True)
         
-        # Se instancian las clases que participan del procesamiento
+        # Instancia los componentes de procesamiento y visualización
         mi_procesador = procesador.procesador
         mi_visualizador = visualizador.visualizador.Visualizador(ruta_salida, ruta_archivo.stem)
         mi_reportador = reportador.reportador
         
-        # Mostrar métricas
+        # Muestra las métricas de la señal cargada
         print("    |--> Métricas de la señal")
         print(senial_audio.metricas())
 
-        # Paso 2 - Se procesa la senial adquirida
         print("Inicio - Paso 2 - Procesamiento")
         
+        # Elimina la componente de continua de la señal de audio
         print("    |--> Se resta la continua")
         DCRemover = mi_procesador.DCRemover(senial_audio)
         DCRemover.process()
         senial_audio_dc_remove = DCRemover.get_processed_data()
 
+        # Segmenta la señal para obtener los primeros 10 segundos
         print("    |--> Se segmenta la señal")
-        # Segmentar los primeros 10 segundos
         start_time = 0
         duration = 10
         segmentador = mi_procesador.Segmenter(senial_audio_dc_remove, start_time, duration)
         segmentador.process()
         segmento_senial = segmentador.get_processed_data()
 
+        # Aplica filtros pasa-altos y pasa-bajos a la señal segmentada
         print("    |--> Se filtra la señal")
-        # Aplicar filtros
         filtro_pasa_altos = mi_procesador.HighPassFilter(segmento_senial, cutoff_freq=2500)
         filtro_pasa_altos.process()
         segmento_senial_filtrada_altos = filtro_pasa_altos.get_processed_data()
@@ -106,28 +101,29 @@ class Lanzador:
         filtro_pasa_bajos.process()
         segmento_senial_filtrada = filtro_pasa_bajos.get_processed_data()
         
+        # Calcula el espectro de frecuencias usando FFT
         print("    |--> Se calcula la FFT de la señal")
         fft_processor = mi_procesador.FFTProcessor(segmento_senial_filtrada)
         magitudes, frecuencia, frecuencia_muestreo = fft_processor.process()
         
+        # Expande la señal en el tiempo para análisis detallado
         print("    |--> Se expande temporalmente")
         time_expansion_factor = 10
         time_expansor = mi_procesador.TimeExpander(segmento_senial_filtrada, time_expansion_factor)
         time_expansor.process()
         segmento_senial_expandida = time_expansor.get_processed_data()
         
-        # Paso 3 - Se detectan eventos
         print("Inicio - Paso 3 - Detectar Eventos")
-        energy_threshold = 1e+6  # Umbral de energía
-        min_duration_ms = 20  # Duración mínima de una vocalización en ms
-        focus_freq = (1500,5000)  # Rango de frecuencia para el espectrograma (opcional)
+        # Detecta eventos en la señal de acuerdo a un umbral de energía y duración mínima
+        energy_threshold = 1e+6
+        min_duration_ms = 20
+        focus_freq = (1500,5000)
         event_processor = mi_procesador.EventProcessor(segmento_senial_filtrada, energy_threshold, min_duration_ms, focus_freq, ruta_eventos, ruta_archivo.stem)
         event_processor.process()
 
-        # Paso 4 - Se muestran las seniales
         print("Inicio - Paso 4 - Mostrar Señales")
         
-        # Visualizar los resultados
+        # Visualiza y guarda gráficos de la señal y espectrogramas
         print("    |--> Guardar señal audio completa")
         mi_visualizador.plot_audio(senial_audio)
         print("    |--> Guardar segmento filtrado")
@@ -141,21 +137,17 @@ class Lanzador:
         print("    |--> Guardar espectro frecuencias")
         mi_visualizador.plot_spectrum(magitudes, frecuencia, frecuencia_muestreo)
         
-        # Paso 5 - Generar Reportes
         print("Inicio - Paso 5 - Generar Reportes")
         
+        # Genera reportes en formato JSON y PDF
         print("    |--> Generar reportes JSON")
-        # Crear un objeto de reporte JSON
         mi_reportador_json = mi_reportador.JSONReportGenerator(ruta_salida)
-        # Generar el reporte
         mi_reportador_json.generate_report(senial_audio, segmentador, filtro_pasa_altos, filtro_pasa_bajos, event_processor)
        
         print("    |--> Generar reportes PDF")
-        # Crear un objeto de reporte PDF
         mi_reportador_pdf = mi_reportador.PDFReportGenerator(ruta_salida)
-        # Generar el reporte
         mi_reportador_pdf.generate_report(senial_audio, segmentador, filtro_pasa_altos, filtro_pasa_bajos, event_processor)
  
-        
+
 if __name__ == "__main__":
     Lanzador().ejecutar()
