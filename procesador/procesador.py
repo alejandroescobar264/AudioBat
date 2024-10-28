@@ -267,7 +267,6 @@ class EventProcessor(AudioProcessor):
         """
         if not self.events:
             print("No se detectaron eventos.")
-            return
 
         data = [[start, end, (end - start) * 1000] for start, end in self.events]
         df = pd.DataFrame(data, columns=['Inicio', 'Fin', 'Duración (ms)'])
