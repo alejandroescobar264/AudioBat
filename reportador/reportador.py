@@ -1,39 +1,67 @@
 import json
 import os
 from modelo.senial import SenialAudio
-from procesador.procesador import *
+from procesador.procesador import Segmenter, HighPassFilter, LowPassFilter, EventProcessor
 from reportlab.pdfgen import canvas
-from reportlab.lib.utils import ImageReader
-
+from reportlab.lib.pagesizes import A4
 from abc import ABC, abstractmethod
+from typing import Union, Dict, Any, List
+
 
 class ReportGenerator(ABC):
-    """Clase base para generar reportes"""
+    """
+    Clase base abstracta para generar reportes.
+    Define la interfaz para las clases de generación de reportes.
+    """
 
-    def __init__(self, output_dir):
-        self.output_dir = output_dir
-        
+    def __init__(self, output_dir: Union[str, os.PathLike]):
+        """
+        Inicializa el generador de reportes.
+
+        Args:
+            output_dir (Union[str, os.PathLike]): Directorio donde se guardará el reporte.
+        """
+        self.output_dir: Union[str, os.PathLike] = output_dir
+
     @abstractmethod
-    def generate_report(self):
+    def generate_report(self, *args, **kwargs) -> None:
+        """
+        Método abstracto para generar el reporte.
+        Debe ser implementado por las subclases.
+        """
         raise NotImplementedError("Subclases deben implementar este método")
 
+
 class JSONReportGenerator(ReportGenerator):
-    
-    def __init__(self, output_dir):
+    """
+    Clase para generar un reporte en formato JSON con los resultados del análisis de señal de audio.
+    """
+
+    def __init__(self, output_dir: Union[str, os.PathLike]):
         """
-        Inicializa el procesador FFTProcessor.
-        
+        Inicializa el generador de reportes JSON.
+
+        Args:
+            output_dir (Union[str, os.PathLike]): Directorio donde se guardará el reporte JSON.
         """
         super().__init__(output_dir)
-        
-    
-    def generate_report(self, senial_audio: SenialAudio, segmenter:Segmenter, filtro_hp:HighPassFilter, 
-                        filtro_lp:LowPassFilter,  event_processor: EventProcessor):
-        """Genera un reporte en formato JSON"""
-        
+
+    def generate_report(self, senial_audio: SenialAudio, segmenter: Segmenter, 
+                        filtro_hp: HighPassFilter, filtro_lp: LowPassFilter, 
+                        event_processor: EventProcessor) -> None:
+        """
+        Genera un reporte en formato JSON con métricas y parámetros de análisis.
+
+        Args:
+            senial_audio (SenialAudio): Señal de audio procesada.
+            segmenter (Segmenter): Segmentador de la señal.
+            filtro_hp (HighPassFilter): Filtro pasa-altos.
+            filtro_lp (LowPassFilter): Filtro pasa-bajos.
+            event_processor (EventProcessor): Procesador de eventos.
+        """
         # Obtener datos relevantes
         file_path = str(self.output_dir)
-        metrics = senial_audio.metricas() 
+        metrics = senial_audio.metricas()
         segment_start = segmenter.start_time
         segment_end = segment_start + segmenter.duration
         parameters = {
@@ -62,18 +90,33 @@ class JSONReportGenerator(ReportGenerator):
             json.dump(report, f, indent=4)
 
 
-from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
-
 class PDFReportGenerator(ReportGenerator):
+    """
+    Clase para generar un reporte en formato PDF con los resultados del análisis de señal de audio.
+    """
 
-    def __init__(self, output_dir):
+    def __init__(self, output_dir: Union[str, os.PathLike]):
+        """
+        Inicializa el generador de reportes PDF.
+
+        Args:
+            output_dir (Union[str, os.PathLike]): Directorio donde se guardará el reporte PDF.
+        """
         super().__init__(output_dir)
 
-    def generate_report(self, senial_audio: SenialAudio, segmenter: Segmenter, filtro_hp: HighPassFilter,
-                        filtro_lp: LowPassFilter, event_processor: EventProcessor):
-        """Genera un reporte en formato PDF"""
+    def generate_report(self, senial_audio: SenialAudio, segmenter: Segmenter, 
+                        filtro_hp: HighPassFilter, filtro_lp: LowPassFilter, 
+                        event_processor: EventProcessor) -> None:
+        """
+        Genera un reporte en formato PDF con métricas y parámetros de análisis.
 
+        Args:
+            senial_audio (SenialAudio): Señal de audio procesada.
+            segmenter (Segmenter): Segmentador de la señal.
+            filtro_hp (HighPassFilter): Filtro pasa-altos.
+            filtro_lp (LowPassFilter): Filtro pasa-bajos.
+            event_processor (EventProcessor): Procesador de eventos.
+        """
         # Obtener datos relevantes
         file_path = str(self.output_dir)
         metrics = senial_audio.metricas()
@@ -87,25 +130,25 @@ class PDFReportGenerator(ReportGenerator):
             'focus_freq': event_processor.focus_freq
         }
         events = event_processor.events
-            
-        # Manejo de eventos como tuplas (with empty list handling)
-        if events and isinstance(events[0], tuple):  # Check if events is not empty and first element is a tuple
+
+        # Formatear los eventos como una lista de diccionarios
+        if events and isinstance(events[0], tuple):
             events = [{'inicio': e[0], 'fin': e[1]} for e in events]
 
         # Crear el reporte PDF
         report = canvas.Canvas(f"{self.output_dir}/{self.output_dir.stem}_report.pdf", pagesize=A4)
 
-        # Establecer posición inicial para el contenido
+        # Configuración inicial del PDF
         report.setFont("Helvetica", 12)
-        y_pos = 750  # Iniciar en una posición más segura
+        y_pos = 750  # Posición vertical inicial
         
         report.drawString(50, y_pos, f"Archivo analizado: {file_path}")
         y_pos -= 20
 
-        # Escribir información general
+        # Escribir información de métricas
         for key, value in metrics.items():
             report.drawString(50, y_pos, f"{key}: {value}")
-            y_pos -= 20  # Reducir el espaciado de forma moderada
+            y_pos -= 20
 
         # Segmento analizado
         report.drawString(50, y_pos, f"Segmento analizado: {segment_start} - {segment_end}")
@@ -125,36 +168,38 @@ class PDFReportGenerator(ReportGenerator):
         report.drawString(150, y_pos, "Fin")
         y_pos -= 15
 
-        # Agregar eventos
+        # Agregar eventos detectados al PDF
         for event in events:
             report.drawString(70, y_pos, str(event.get('inicio', 'N/A')))
             report.drawString(150, y_pos, str(event.get('fin', 'N/A')))
             y_pos -= 15
 
-        # Finalizar la página de contenido principal
-        report.showPage()
+        report.showPage()  # Termina la página de contenido principal
 
-        # Función para agregar imágenes desde un directorio
-        def agregar_imagenes_desde_directorio(directorio):
+        # Agregar imágenes al PDF desde un directorio
+        def agregar_imagenes_desde_directorio(directorio: str) -> None:
+            """
+            Agrega todas las imágenes PNG de un directorio al PDF, cada imagen en una página nueva.
+
+            Args:
+                directorio (str): Ruta del directorio con las imágenes.
+            """
             for filename in os.listdir(directorio):
                 if filename.endswith(".png"):
                     img_path = os.path.join(directorio, filename)
-                    # Crear una nueva página para cada imagen
                     report.drawImage(img_path, 50, 150, width=500, height=400)
-                    report.showPage()  # Cerrar la página de la imagen
+                    report.showPage()
 
-        # Agregar imágenes desde el directorio principal
+        # Agregar imágenes de salida y eventos
         agregar_imagenes_desde_directorio(self.output_dir)
 
-        # Agregar imágenes desde la carpeta "eventos"
         eventos_dir = os.path.join(self.output_dir, "eventos")
         if os.path.exists(eventos_dir):
             agregar_imagenes_desde_directorio(eventos_dir)
 
-            # Agregar imágenes desde la carpeta "individuales" dentro de "eventos"
+            # Agregar imágenes de eventos individuales
             individuales_dir = os.path.join(eventos_dir, "individuales")
             if os.path.exists(individuales_dir):
                 agregar_imagenes_desde_directorio(individuales_dir)
 
-        # Guardar el reporte
-        report.save()
+        report.save()  # Guardar el archivo PDF
