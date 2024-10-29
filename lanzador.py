@@ -129,7 +129,7 @@ class Lanzador:
         print("    |--> Guardar segmento filtrado")
         mi_visualizador.plot_audio_segment_filtrado(segmento_senial, segmento_senial_filtrada, start_time)
         print("    |--> Guardar espectrograma del segmento")
-        mi_visualizador.plot_audio_segment_and_spectrogram(segmento_senial, start_time, focus_freq)
+        mi_visualizador.plot_audio_segment_and_spectrogram(segmento_senial_filtrada, start_time, focus_freq)
         print("    |--> Guardar espectrograma con eventos")
         mi_visualizador.plot_spectrogram_events_complete(event_processor)
         print("    |--> Guardar espectrograma de cada evento")
